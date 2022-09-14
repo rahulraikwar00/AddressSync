@@ -7,7 +7,7 @@ from fastapi import FastAPI,Depends,HTTPException,status
 from db.database import *
 from db.crud import *
 from db.models import *
-from db.schema import *
+from db.schemas import *
 from auth.user import *
 from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -19,45 +19,10 @@ app = FastAPI()
 async def createDb():
     cr_db()
 
- 
-
 @app.get("/")
 async def create():
     cr_db()
     return {"message":" database created"}
-
-
-@app.post("/upload")
-async def upload(data: Aadhaar,current_user: User_data = Depends(get_current_active_user)):
-    ins_data_hub(data)
-    return {"message": "Data uploaded"}
-
-
-@app.get("/download_all/")
-async def download(current_user: User_data = Depends(get_current_active_user)):
-    return get_all_data()
-
-
-@app.post("/download")
-async def download(columns: QuerType, current_user: User_data = Depends(get_current_active_user)):
-    return get_data_by_columns(columns)
-
-@app.post("/download_by_premsat")
-async def download_by_premsat(multiSelctionDropdown: List[select_params] = Query(...),current_user: User_data = Depends(get_current_active_user)):
-    return getDataByParms(multiSelctionDropdown)
-
-
-#api authentication test
-
-
-
-
-
-# to get a string like this run:
-# openssl rand -hex 32
-
-
-
 
 @app.get("/data")
 def get_u(current_user: User_data = Depends(get_current_active_user)):
@@ -67,19 +32,6 @@ def get_u(current_user: User_data = Depends(get_current_active_user)):
         res[i['username']] = i
     print("get data: ", res)
     return res
-
-    
-
-
-
-
-
-# class UserInDB(User_data):
-#     hashed_password: str
-
-
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 @app.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -105,12 +57,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         return e
     return access_token
 
-
-# @app.get('/register')
-# def reg():
-#     register_users()
-#     return "data uploaded"
-
 @app.get('/register')
 def reg(form_data: User = Depends()):
     if(form_data.confirmpass==form_data.password):
@@ -120,18 +66,9 @@ def reg(form_data: User = Depends()):
         return 'wrong confirm pass'
 
 
-
-
-
-
 @app.get("/users/me/")
 async def read_users_me(current_user: User_data = Depends(get_current_active_user)):
     return current_user
-
-
-# @app.get("/users/me/items/")
-# async def read_own_items(current_user: User_data = Depends(get_current_active_user)):
-#     return [{"item_id": "Foo", "owner": current_user.username}]
 
 
 
