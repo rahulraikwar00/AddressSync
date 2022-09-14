@@ -24,9 +24,9 @@ def register_users(data:agency):
         db.commit()
 
 #get user data for authentication
-def get_all_agency()->dict:
+def get_all_users()->dict:
     with get_db() as db:
         res = db.exec(
-            "SELECT * FROM agency_data;"
+            "SELECT * FROM users_data;"
         ).fetchall()
         return res
