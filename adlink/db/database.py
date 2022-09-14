@@ -1,5 +1,11 @@
+import os
 from sqlmodel import SQLModel, create_engine
 import sqlalchemy_utils as sa_utils
+from dotenv import load_dotenv
+load_dotenv()
+
+
+SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:1234@localhost:3306/advault2"
 SQLALCHEMY_DATABASE_URL = "postgresql://postgres:root@localhost:5432/adlinkdb"
