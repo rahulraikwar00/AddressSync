@@ -1,4 +1,3 @@
-
 from .schemas import *
 
 class User_data(SQLModel,table=True): #storing user info in db
