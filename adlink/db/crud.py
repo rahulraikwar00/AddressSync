@@ -13,16 +13,20 @@ def get_db():
     db = Session(engine)
     return db
 
-def register_users(data:User):
+def add_ag_login(data:agency_data):
+    pass
+
+def register_users(data:agency):
     with get_db() as db:
-        user = User_data(username=data.username,hashed_password = pwd_context.hash(data.password),disabled = False)
-        db.add(user)
+        ag = agency_data(ag_uniq_id = data.ag_uniq_id,agencyName = data.agencyName)
+        db.add(ag)
+        add_ag_login(ag)  #function to add login details of agency
         db.commit()
 
 #get user data for authentication
-def get_all_users()->dict:
+def get_all_agency()->dict:
     with get_db() as db:
         res = db.exec(
-            "SELECT * FROM user_data;"
+            "SELECT * FROM agency_data;"
         ).fetchall()
         return res

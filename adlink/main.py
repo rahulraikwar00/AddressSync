@@ -58,7 +58,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return access_token
 
 @app.get('/register')
-def reg(form_data: User = Depends()):
+def reg(form_data: agency = Depends()):
     if(form_data.confirmpass==form_data.password):
         register_users(form_data)
         return 'data uploaded' 
