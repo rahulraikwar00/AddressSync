@@ -1,5 +1,5 @@
 #user table for api authentication
-from schemas import *
+from .schemas import *
 
 class User_data(SQLModel,table=True): #model for storing user info in db
     username : str= Field(primary_key=True)
