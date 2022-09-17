@@ -1,7 +1,4 @@
-from ast import main
-from re import A
-from typing import Union
-from urllib import response
+
 from fastapi import FastAPI,Depends,HTTPException,status
 # import local database file
 from db.database import *
