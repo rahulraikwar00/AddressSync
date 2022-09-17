@@ -16,7 +16,7 @@ class TokenData(SQLModel):
 #     disabled: Union[bool, None] = None
 
 class agency(SQLModel): #organisation registeration form
-    agencyName:str
+    agency_Name:str
     ag_uniq_id:str   #(ifsc if bank else its uniqueid)
     password:str
     cnfpass:str

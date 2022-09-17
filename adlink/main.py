@@ -62,7 +62,11 @@ def reg(form_data: agency = Depends()):
     else:
         return 'wrong confirm pass'
 
+@app.get('/get data of agencies')
+def data():
+    return get_all_agencies()
 
+    
 # @app.get("/users/me/")
 # async def read_users_me(current_user: User_data = Depends(get_current_active_user)):
 #     return current_user
