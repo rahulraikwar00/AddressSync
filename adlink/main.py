@@ -54,9 +54,6 @@ def agresp(data : response_form = Depends()):
     #     return "your request was declined by the agency"
 
 
-
-
-
 # @app.get("/data")
 # def get_u(current_user: User_data = Depends(get_current_active_user)):
 #     users_db = get_all_users()
