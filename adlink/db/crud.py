@@ -61,7 +61,8 @@ def getreq():
 def ag_res(data:response_form):
     with get_db() as db:
         res = db.exec(
-            f"UPDATE user_req_agency SET status = {int(data.status)} WHERE reqid = {str(data.request_id)};"
+            f"UPDATE user_req_agency SET status = '{data.status}' WHERE reqid = '{data.request_id}';"
         )
+        db.commit()
         return data.status
         
