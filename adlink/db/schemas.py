@@ -30,4 +30,4 @@ class user_req_agency_form(SQLModel):
 
 class response_form(SQLModel):
     request_id : str
-    status : int
+    status : str
