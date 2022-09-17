@@ -14,10 +14,10 @@ class agency_data(SQLModel,table=True): #storing organisation info in db
     hashedpass:str
 
 class user_req_agency(SQLModel,table=True): #user requesting any agency 
-    reqid:str = Field(primary_key=True)
+    reqid:str = Field(default = uuid.uuid1(),primary_key=True)
     agencyid:str = Field(foreign_key = "agency_data.agency_id")
     adhaar:str 
     custid:str
-    fetched_data:str
-    status:str
+    fetched_data:str = Field(default = "new address")
+    status:str = Field(default = "pending")
 

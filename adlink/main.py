@@ -21,6 +21,29 @@ async def create():
     cr_db()
     return {"message":" database created"}
 
+
+@app.get('/register')
+def reg(form_data: agency = Depends()):
+    if(form_data.cnfpass==form_data.password):
+        register_users(form_data)
+        return 'data uploaded' 
+    else:
+        return 'wrong confirm pass'
+
+@app.get('/get data of agencies')
+def data():
+    return get_all_agencies()
+
+
+@app.get('/request update')
+def reqUp(form_data: user_req_agency_form = Depends()):
+    syncUp(form_data)
+    return "a request to update address changes has been initiated"
+
+@app.get('/get request')
+def disreq():
+    return getreq()
+
 # @app.get("/data")
 # def get_u(current_user: User_data = Depends(get_current_active_user)):
 #     users_db = get_all_users()
@@ -54,19 +77,6 @@ async def create():
 #         return e
 #     return access_token
 
-@app.get('/register')
-def reg(form_data: agency = Depends()):
-    if(form_data.cnfpass==form_data.password):
-        register_users(form_data)
-        return 'data uploaded' 
-    else:
-        return 'wrong confirm pass'
-
-@app.get('/get data of agencies')
-def data():
-    return get_all_agencies()
-
-    
 # @app.get("/users/me/")
 # async def read_users_me(current_user: User_data = Depends(get_current_active_user)):
 #     return current_user

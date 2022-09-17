@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 import hashlib
 from features.dropdown import *
 from passlib.context import CryptContext
+from uuid import uuid1
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -30,3 +31,24 @@ def get_all_agencies()->dict:
             "SELECT * FROM agency_data;"
         ).fetchall()
         return res
+
+def getagid(agunid):
+    with get_db() as db:
+        res = db.exec(
+            f"SELECT agency_id FROM agency_data WHERE ag_uniq_id = '{agunid}';"
+        ).one()
+        return res.agency_id
+
+def syncUp(data:user_req_agency_form):
+    with get_db() as db:
+        agenid = getagid(data.ag_uniq_id)
+        req = user_req_agency(agencyid = agenid,adhaar = data.Adhaar,custid = data.custid)
+        db.add(req)
+        db.commit()
+
+def getreq():
+    with get_db() as db:
+        reqs = db.exec(
+            "SELECT * FROM user_req_agency;"
+        ).fetchall()
+        return reqs
