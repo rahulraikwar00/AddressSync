@@ -20,3 +20,5 @@ class user_req_agency(SQLModel,table=True): #user requesting any agency
     custid:str
     fetched_data:str
     status:str
+
+    
