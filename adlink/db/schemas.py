@@ -1,5 +1,7 @@
+from dataclasses import field
 from typing import Optional,Union
 import datetime
+from xml.dom.minicompat import defproperty
 from sqlmodel import Field, SQLModel
 
 class Token(SQLModel):
@@ -28,3 +30,4 @@ class user_req_agency_form(SQLModel):
 
 class response_form(SQLModel):
     request_id : str
+    status : int

@@ -45,8 +45,8 @@ def disreq():
     return getreq()
 
 @app.get('/ag_response')
-def agresp(reqid: response_form = Depends()):
-    resp = ag_res(reqid)
+def agresp(data : response_form = Depends()):
+    resp = ag_res(data)
     if(resp):
         return "agency has approved your request"
     else:

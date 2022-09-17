@@ -55,13 +55,13 @@ def getreq():
         return reqs
 
 def res_data():
-    return 0 #get response from agency
+    return 1 #get response from agency
 
-def ag_res(reqid):
+def ag_res(data:response_form):
     with get_db() as db:
         res = db.exec(
-            f"SELECT * FROM user_req_agency WHERE reqid = '{reqid}';"
-        ).fetchall()
+            f"UPDATE user_req_agency SET status = {data.status} WHERE reqid = '{data.request_id}';"
+        )
         print(res)
         return res_data()
         

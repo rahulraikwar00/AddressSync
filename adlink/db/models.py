@@ -19,5 +19,5 @@ class user_req_agency(SQLModel,table=True): #user requesting any agency
     adhaar:str 
     custid:str
     fetched_data:str = Field(default = "new address")
-    status:str = Field(default = "pending")
+    status:int = Field(default = 0)
 
