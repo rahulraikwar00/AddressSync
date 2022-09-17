@@ -1,5 +1,6 @@
 
 from .schemas import *
+from sqlalchemy import UniqueConstraint
 import uuid
 from sqlalchemy import UniqueConstraint
 # class User_data(SQLModel,table=True): #storing user info in db

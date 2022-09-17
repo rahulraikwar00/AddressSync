@@ -47,13 +47,11 @@ def disreq():
 @app.get('/ag_response')
 def agresp(data : response_form = Depends()):
     resp = ag_res(data)
-    if(resp):
-        return "agency has approved your request"
-    else:
-        return "your request was declined by the agency"
-
-
-
+    return resp
+    # if(resp):
+    #     return "agency has approved your request"
+    # else:
+    #     return "your request was declined by the agency"
 
 
 # @app.get("/data")
