@@ -60,8 +60,8 @@ def res_data():
 def ag_res(reqid):
     with get_db() as db:
         res = db.exec(
-            f"SELECT * FROM user_req_agency WHERE reqid = '{reqid}'"
-        ).one()
+            f"SELECT * FROM user_req_agency WHERE reqid = '{reqid}';"
+        ).fetchall()
         print(res)
         return res_data()
         

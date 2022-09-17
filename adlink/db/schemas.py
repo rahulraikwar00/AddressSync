@@ -27,4 +27,4 @@ class user_req_agency_form(SQLModel):
     custid:str
 
 class response_form(SQLModel):
-    request_id = str
+    request_id : str
