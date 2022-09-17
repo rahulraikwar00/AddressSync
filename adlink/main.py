@@ -30,19 +30,31 @@ def reg(form_data: agency = Depends()):
     else:
         return 'wrong confirm pass'
 
-@app.get('/get data of agencies')
+@app.get('/get_data_of_agencies')
 def data():
     return get_all_agencies()
 
 
-@app.get('/request update')
+@app.get('/request_update')
 def reqUp(form_data: user_req_agency_form = Depends()):
     syncUp(form_data)
     return "a request to update address changes has been initiated"
 
-@app.get('/get request')
+@app.get('/get_request')
 def disreq():
     return getreq()
+
+# @app.get('/ag_response')
+# def agresp(reqid: response_form = Depends()):
+#     resp = ag_res(reqid)
+#     if(resp):
+#         return "agency has approved your request"
+#     else:
+#         return "your request was declined by the agency"
+
+
+
+
 
 # @app.get("/data")
 # def get_u(current_user: User_data = Depends(get_current_active_user)):

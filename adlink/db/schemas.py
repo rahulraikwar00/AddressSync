@@ -26,3 +26,5 @@ class user_req_agency_form(SQLModel):
     ag_uniq_id:str
     custid:str
 
+class response_form(SQLModel):
+    request_id = str

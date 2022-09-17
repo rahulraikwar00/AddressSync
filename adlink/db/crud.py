@@ -7,6 +7,7 @@ import hashlib
 from features.dropdown import *
 from passlib.context import CryptContext
 from uuid import uuid1
+from fastapi.security import OAuth2PasswordRequestForm
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -52,3 +53,15 @@ def getreq():
             "SELECT * FROM user_req_agency;"
         ).fetchall()
         return reqs
+
+def res_data():
+    return 0 #get response from agency
+
+def ag_res(reqid):
+    with get_db() as db:
+        res = db.exec(
+            f"SELECT * FROM user_req_agency WHERE reqid = '{reqid}'"
+        ).one()
+        print(res)
+        return res_data()
+        
