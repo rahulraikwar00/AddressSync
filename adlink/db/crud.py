@@ -65,5 +65,9 @@ def ag_res(data:response_form):
             f"UPDATE user_req_agency SET status = '{data.status}' WHERE reqid = '{data.request_id}';"
         )
         db.commit()
-        return db.exec("SELECT * from user_req_agency;").fetchall()
+        ls = db.exec(f"SELECT * from user_req_agency Where reqid='{data.request_id}';").fetchall()
+        if(not len(ls)):
+            return "request id not found, please check the request id"
+        else:
+            return ls
         
