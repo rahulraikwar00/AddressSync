@@ -1,15 +1,24 @@
-#user table for api authentication
+
 from .schemas import *
+from sqlalchemy import UniqueConstraint
+import uuid
+# class User_data(SQLModel,table=True): #storing user info in db
+#     Adhaar : str= Field(primary_key=True)
+#     username:str
+#     hashed_password: str 
+#     disabled: bool
 
-class User_data(SQLModel,table=True): #model for storing user info in db
-    username : str= Field(primary_key=True)
-    hashed_password: str 
-    disabled: bool
+class agency_data(SQLModel,table=True): 
+    __table_args__ =(UniqueConstraint('ag_uniq_id',name='ag_uniq_id'),)
+    agency_id:str = Field(primary_key=True)
+    ag_uniq_id:str
+    hashedpass:str
 
-class Org_data(SQLModel,table=True): #model for storing organisation info in db
-    orgid:str= Field(primary_key=True)
-    orgName:str
-    password:str
+class user_req_agency(SQLModel,table=True): #user requesting any agency 
+    reqid:str = Field(primary_key=True)
+    agencyid:str = Field(foreign_key = "agency_data.agency_id")
+    adhaar:str 
+    custid:str
+    fetched_data:str = Field(default = "new address")
+    status:str = Field(default = "0")
 
-class user_req(user_req_form,table=True): #store user req info
-    id:Optional[int] = Field(primary_key=True)

@@ -12,6 +12,7 @@ if not sa_utils.functions.database_exists(SQLALCHEMY_DATABASE_URL):
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 
 
+
 def cr_db():
     SQLModel.metadata.create_all(engine)
 
