@@ -7,8 +7,7 @@ load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:1234@localhost:3306/advault2"
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:root@localhost:5432/adlinkdb"
+
 if not sa_utils.functions.database_exists(SQLALCHEMY_DATABASE_URL):
     sa_utils.functions.create_database(SQLALCHEMY_DATABASE_URL)
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
