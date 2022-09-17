@@ -2,16 +2,18 @@
 from .schemas import *
 from sqlalchemy import UniqueConstraint
 import uuid
+from sqlalchemy import UniqueConstraint
 # class User_data(SQLModel,table=True): #storing user info in db
 #     Adhaar : str= Field(primary_key=True)
 #     username:str
 #     hashed_password: str 
 #     disabled: bool
 
-class agency_data(SQLModel,table=True): 
-    __table_args__ =(UniqueConstraint('ag_uniq_id',name='ag_uniq_id'),)
+class agency_data(SQLModel,table=True): #storing organisation info in db
+    __table_args__ = (UniqueConstraint('agency_id'),)
     agency_id:str = Field(primary_key=True)
-    ag_uniq_id:str
+    ag_uniq_id:str 
+    agency_Name:str
     hashedpass:str
 
 class user_req_agency(SQLModel,table=True): #user requesting any agency 
