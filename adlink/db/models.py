@@ -24,3 +24,5 @@ class user_req_agency(SQLModel,table=True): #user requesting any agency
     fetched_data:str = Field(default = "new address")
     status:str = Field(default = "0")
 
+class agencyid(SQLModel):
+    agencyid:str
