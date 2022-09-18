@@ -1,59 +1,84 @@
+from http import server
+import re
+from urllib import request
+from xml.sax import default_parser_list
+from fastapi import FastAPI, Depends, HTTPException, status
 
-from fastapi import FastAPI,Depends,HTTPException,status
 # import local database file
+from db.sendsms import *
 from db.database import *
 from db.crud import *
 from db.models import *
 from db.schemas import *
+
 # from auth.user import *
-from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
+
 app = FastAPI()
+
 
 @app.on_event("startup")
 async def createDb():
     cr_db()
 
+
 @app.get("/")
 async def create():
     cr_db()
-    return {"message":" database created"}
+    return {"message": " database created"}
 
 
-@app.get('/register')
+@app.get("/register")
 def reg(form_data: agency = Depends()):
-    if(form_data.cnfpass==form_data.password):
+    if form_data.cnfpass == form_data.password:
         register_users(form_data)
-        return 'data uploaded' 
+        return "data uploaded"
     else:
-        return 'wrong confirm pass'
+        return "wrong confirm pass"
 
-@app.get('/get_data_of_agencies')
+
+@app.get("/get_data_of_agencies")
 def data():
     return get_all_agencies()
 
 
-@app.get('/request_update')
+@app.get("/request_update")
 def reqUp(form_data: user_req_agency_form = Depends()):
-    syncUp(form_data)
-    return "a request to update address changes has been initiated"
+    req = syncUp(form_data)
+    send_sms(
+        f" Dear Applicant , we have received your request to update your address and will be sending you a notification as soon as there is any update from the agency. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : '{req.status}'"
+    )
+    return "request has been initiated"
 
-@app.get('/get_request')
+
+@app.get("/get_request")
 def disreq():
     return getreq()
 
-@app.get('/ag_response')
-def agresp(data : response_form = Depends()):
-    resp = ag_res(data)
-    return resp
-    # if(resp):
-    #     return "agency has approved your request"
-    # else:
-    #     return "your request was declined by the agency"
+
+@app.get("/ag_response")
+def agresp(data: response_form = Depends()):
+    req = ag_res(data)
+    if(req):
+        req = req[0]
+        name = get_name(req.agencyid)
+        if(req.status == '1'):
+            send_sms(
+                f"Dear Applicant, your request to update your address has been approved by '{name}'. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : APPROVED"
+            )
+        else:
+            send_sms(
+                f"Dear Applicant, your request to update your address has been declined by '{name}'. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : DECLINED"
+            )
+    else:
+        return "your request was declined by the agency"
+    return "response has been sent to the applicant"
 
 
+        
 # @app.get("/data")
 # def get_u(current_user: User_data = Depends(get_current_active_user)):
 #     users_db = get_all_users()
@@ -78,9 +103,9 @@ def agresp(data : response_form = Depends()):
 #         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 #         # create access token
 #         access_token = create_access_token(
-#             data={"sub": user.username}, expires_delta=access_token_expires 
+#             data={"sub": user.username}, expires_delta=access_token_expires
 #         )
-        
+
 
 #         return {"access_token": access_token, "token_type": "bearer"}
 #     except Exception as e:
@@ -90,29 +115,6 @@ def agresp(data : response_form = Depends()):
 # @app.get("/users/me/")
 # async def read_users_me(current_user: User_data = Depends(get_current_active_user)):
 #     return current_user
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -144,7 +146,6 @@ def agresp(data : response_form = Depends()):
 #     email: Union[str,None]
 #     full_name: Union[str,None]
 #     disabled: Union[bool,None]
-
 
 
 # class UserInDB(User):
@@ -196,21 +197,6 @@ def agresp(data : response_form = Depends()):
 # @app.get("/users/me")
 # async def read_users_me(current_user: User = Depends(get_current_active_user)):
 #     return current_user
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # class me:

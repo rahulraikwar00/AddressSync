@@ -45,10 +45,12 @@ def getagid(agunid):
 
 def syncUp(data:user_req_agency_form):
     with get_db() as db:
+        reid = str(uuid.uuid1())
         agenid = getagid(data.ag_uniq_id)
-        req = user_req_agency(reqid= str(uuid.uuid1()), agencyid = agenid,adhaar = data.Adhaar,custid = data.custid)
+        req = user_req_agency(reqid= reid, agencyid = agenid,adhaar = data.Adhaar,custid = data.custid)
         db.add(req)
         db.commit()
+        return db.exec(f"SELECT * FROM user_req_agency WHERE reqid = '{reid}';").fetchall()[0]
 
 def getreq():
     with get_db() as db:
@@ -70,4 +72,10 @@ def ag_res(data:response_form):
             return "request id not found, please check the request id"
         else:
             return ls
-        
+    
+def get_name(agid):
+    with get_db() as db:
+        res = db.exec(
+            f"SELECT agency_Name FROM  agency_data WHERE agency_id = '{agid}';"
+        ).one()
+        return res.agency_Name
