@@ -15,11 +15,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_db():
     db = Session(engine)
-    return db
-
-# def add_ag_login(data:agency_data):
-#     pass
-
+    try:
+        yield db
+    finally:
+        db.close()
+        
 def register_users(data:agency):
     # return uuid.uuid1()
     with get_db() as db:
