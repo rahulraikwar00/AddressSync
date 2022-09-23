@@ -3,11 +3,11 @@ from .schemas import *
 from sqlalchemy import UniqueConstraint
 import uuid
 from sqlalchemy import UniqueConstraint
-# class User_data(SQLModel,table=True): #storing user info in db
-#     Adhaar : str= Field(primary_key=True)
-#     username:str
-#     hashed_password: str 
-#     disabled: bool
+class User_data(SQLModel,table=True): #storing user info in db
+    Adhaar : str= Field(primary_key=True)
+    username:str
+    hashed_password: str 
+    disabled: bool
 
 class agency_data(SQLModel,table=True): #storing organisation info in db
     __table_args__ = (UniqueConstraint('agency_id'),)
