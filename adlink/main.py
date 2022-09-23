@@ -17,21 +17,36 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 
-app = FastAPI()
+# add prefix to all routes
+app = FastAPI(
+    title="Adlink API",
+    description="Adlink API",
+    version="0.0.1",
+    openapi_url="/api/v1/openapi.json",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
+)
+
+# add prefix to all endpoints
+prefix = ""
+
 
 
 @app.on_event("startup")
 async def createDb():
     cr_db()
 
+@app.get(prefix+"/get_data_of_agencies", tags=["Admin"])
+def data():
+    """_summary_: Get data of agencies
 
-@app.get("/")
-async def create():
-    cr_db()
-    return {"message": " database created"}
+    Returns:
+        _type_: _description_
+    """
+    return get_all_agencies()
 
 
-@app.get("/register")
+@app.post(prefix+"/register", tags=["Agencies"])
 def reg(form_data: agency = Depends()):
     if form_data.cnfpass == form_data.password:
         register_users(form_data)
@@ -40,12 +55,7 @@ def reg(form_data: agency = Depends()):
         return "wrong confirm pass"
 
 
-@app.get("/get_data_of_agencies")
-def data():
-    return get_all_agencies()
-
-
-@app.get("/request_update")
+@app.get(prefix+"/send_update_request", tags=["User"])
 def reqUp(form_data: user_req_agency_form = Depends()):
     req = syncUp(form_data)
     send_sms(
@@ -54,12 +64,12 @@ def reqUp(form_data: user_req_agency_form = Depends()):
     return "request has been initiated"
 
 
-@app.get("/get_request")
+@app.get(prefix+"/get_request",tags=["Agencies","User"])
 def disreq():
     return getreq()
 
 
-@app.get("/ag_response")
+@app.get(prefix+"/ag_response", tags=["Agencies"])
 def agresp(data: response_form = Depends()):
     req = ag_res(data)
     if(req):
@@ -88,29 +98,29 @@ def agresp(data: response_form = Depends()):
 #     print("get data: ", res)
 #     return res
 
-# @app.post("/token")
-# async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-#     try:
-#         fake_users_db = get_u()
-#         user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-#         # print(user)
-#         if not user:
-#             raise HTTPException(
-#                 status_code=status.HTTP_401_UNAUTHORIZED,
-#                 detail="Incorrect username /or password",
-#                 headers={"WWW-Authenticate": "Bearer"},
-#             )
-#         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#         # create access token
-#         access_token = create_access_token(
-#             data={"sub": user.username}, expires_delta=access_token_expires
-#         )
+@app.post(prefix+"/token")
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    try:
+        fake_users_db = get_u()
+        user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+        # print(user)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username /or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        # create access token
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
 
 
-#         return {"access_token": access_token, "token_type": "bearer"}
-#     except Exception as e:
-#         return e
-#     return access_token
+        return {"access_token": access_token, "token_type": "bearer"}
+    except Exception as e:
+        return e
+    return access_token
 
 # @app.get("/users/me/")
 # async def read_users_me(current_user: User_data = Depends(get_current_active_user)):
