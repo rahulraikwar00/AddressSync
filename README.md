@@ -38,6 +38,9 @@ To maintain security in the complete environment, the syncing system has to be i
 | Parameter | Type     | Description                |
 | :-------- | :------- | :------------------------- |
 | `api_key` | `string` | **Required**. Your API key |
+|           |          |                            |
+| :-------- | :------- | :------------------------- |
+| `register`| `string` | **Required**. Your API key |
 
 #### Get item
 
