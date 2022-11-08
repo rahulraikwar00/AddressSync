@@ -58,10 +58,12 @@ def reg(form_data: agency = Depends()):
 @app.get(prefix+"/send_update_request", tags=["User"])
 def reqUp(form_data: user_req_agency_form = Depends()):
     req = syncUp(form_data)
-    send_sms(
+    try: 
+        send_sms(
         f" Dear Applicant , we have received your request to update your address and will be sending you a notification as soon as there is any update from the agency. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : '{req.status}'"
     )
-    return "request has been initiated"
+    except:
+        return "request has been initiated"
 
 
 @app.get(prefix+"/get_request",tags=["Agencies","User"])
