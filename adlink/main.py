@@ -31,12 +31,12 @@ app = FastAPI(
 prefix = ""
 
 
-
 @app.on_event("startup")
 async def createDb():
     cr_db()
 
-@app.get(prefix+"/get_data_of_agencies", tags=["Admin"])
+
+@app.get(prefix + "/get_data_of_agencies", tags=["Admin"])
 def data():
     """_summary_: Get data of agencies
 
@@ -46,7 +46,7 @@ def data():
     return get_all_agencies()
 
 
-@app.post(prefix+"/register", tags=["Agencies"])
+@app.post(prefix + "/register", tags=["Agencies"])
 def reg(form_data: agency = Depends()):
     if form_data.cnfpass == form_data.password:
         register_users(form_data)
@@ -55,42 +55,43 @@ def reg(form_data: agency = Depends()):
         return "wrong confirm pass"
 
 
-@app.get(prefix+"/send_update_request", tags=["User"])
+@app.get(prefix + "/send_update_request", tags=["User"])
 def reqUp(form_data: user_req_agency_form = Depends()):
     req = syncUp(form_data)
-    try: 
+    try:
         send_sms(
-        f" Dear Applicant , we have received your request to update your address and will be sending you a notification as soon as there is any update from the agency. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : '{req.status}'"
-    )
+            f" Dear Applicant , we have received your request to update your address and will be sending you a notification as soon as there is any update from the agency. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : '{req.status}'"
+        )
     except:
         return "request has been initiated"
 
 
-@app.get(prefix+"/get_request",tags=["Agencies","User"])
+@app.get(prefix + "/get_request", tags=["Agencies", "User"])
 def disreq():
     return getreq()
 
 
-@app.get(prefix+"/ag_response", tags=["Agencies"])
+@app.get(prefix + "/ag_response", tags=["Agencies"])
 def agresp(data: response_form = Depends()):
     req = ag_res(data)
-    if(req):
-        req = req[0]
-        name = get_name(req.agencyid)
-        if(req.status == '1'):
-            send_sms(
-                f"Dear Applicant, your request to update your address has been approved by '{name}'. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : APPROVED"
-            )
+    try:
+        if req:
+            req = req[0]
+            name = get_name(req.agencyid)
+            if req.status == "1":
+                send_sms(
+                    f"Dear Applicant, your request to update your address has been approved by '{name}'. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : APPROVED"
+                )
+            else:
+                send_sms(
+                    f"Dear Applicant, your request to update your address has been declined by '{name}'. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : DECLINED"
+                )
         else:
-            send_sms(
-                f"Dear Applicant, your request to update your address has been declined by '{name}'. Request details: Request id :'{req.reqid}', Agency id : '{req.agencyid}' ,Account number of customer id : '{req.custid}', Status : DECLINED"
-            )
-    else:
-        return "your request was declined by the agency"
-    return "response has been sent to the applicant"
+            return "your request was declined by the agency"
+    except:
+        return "response has been sent to the applicant"
 
 
-        
 # @app.get("/data")
 # def get_u(current_user: User_data = Depends(get_current_active_user)):
 #     users_db = get_all_users()
@@ -100,7 +101,8 @@ def agresp(data: response_form = Depends()):
 #     print("get data: ", res)
 #     return res
 
-@app.post(prefix+"/token")
+
+@app.post(prefix + "/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         fake_users_db = get_u()
@@ -118,11 +120,11 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
 
-
         return {"access_token": access_token, "token_type": "bearer"}
     except Exception as e:
         return e
     return access_token
+
 
 # @app.get("/users/me/")
 # async def read_users_me(current_user: User_data = Depends(get_current_active_user)):
