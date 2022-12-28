@@ -14,14 +14,7 @@ Add badges from somewhere like: [shields.io](https://shields.io/)
 
 # Address Syncing System
 
-Users willing to update even a tiny piece of information in one document face issues in changing the same in other documents as all the processes have to be carried out manually by the users.
-The microservice uses Aadhaar as the base document for various other documents that are linked to the Aadhaar number to carry forward address updates done in Aadhaar to other documents as per the user’s choice. The syncing system will notify and ask the selected organizations to sync the user updates from Aadhaar only when requested by the user. The organization has the choice to accept or reject the update request. The organization is liable to provide a valid reason for the rejection of the request. 
-User is notified about the status of his request. Internal representation of status:  
-On initiation/pending : status =0 
-On rejection : status =-1
-On approved : status = 1
-The updated details of the user are fetched from Digi locker by the organization. The organization then makes changes to its user data as per the changes made in Aadhaar. UIDAI will send a notification to the user as well, informing him about the status of request. After carrying out necessary changes organization will send an acknowledgment message to the user to ensure him about the updates.
-To maintain security in the complete environment, the syncing system has to be incorporated internally into UIDAI’s system.
+This microservice aims to streamline the process of updating personal information across multiple documents. It uses the Aadhaar number as a base document, and allows users to request updates to be synced to other linked documents of their choice. The syncing system will notify and ask organizations to sync the updates from the Aadhaar document, and the organizations have the option to accept or reject the request with a valid reason for rejection. The user is notified about the status of their request and the updated details are fetched from the Digi locker by the organization. To ensure security, the syncing system is incorporated internally into UIDAI's system.
 
 ## License
 
