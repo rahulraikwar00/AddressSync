@@ -20,7 +20,7 @@ from passlib.context import CryptContext
 # add prefix to all routes
 app = FastAPI(
     title="Adlink API",
-    description="Adlink API",
+    description="This API provides endpoints for registering agencies, updating requests for users, and responding to those requests for agencies. It also includes endpoints for getting data of agencies and requests, and generating access tokens. The API documentation is available through Swagger UI, and it provides detailed descriptions for each endpoint",
     version="0.0.1",
     openapi_url="/api/v1/openapi.json",
     docs_url="/api/v1/docs",
@@ -38,16 +38,31 @@ async def createDb():
 
 @app.get(prefix + "/get_data_of_agencies", tags=["Admin"])
 def data():
-    """_summary_: Get data of agencies
+    """
+            GET /get_data_of_agencies
+
+    Get data of all agencies.
 
     Returns:
-        _type_: _description_
+
+    List of dictionaries containing agency information.
     """
     return get_all_agencies()
 
 
 @app.post(prefix + "/register", tags=["Agencies"])
 def reg(form_data: agency = Depends()):
+    """
+        Register new agency.
+
+    Request Body:
+
+    agency: An instance of agency schema.
+    Returns:
+
+    "data uploaded" if successful.
+    "wrong confirm pass" if password and confirm password do not match.
+    """
     if form_data.cnfpass == form_data.password:
         register_users(form_data)
         return "data uploaded"
@@ -57,6 +72,21 @@ def reg(form_data: agency = Depends()):
 
 @app.get(prefix + "/send_update_request", tags=["User"])
 def reqUp(form_data: user_req_agency_form = Depends()):
+
+    """
+        Send update request for user's address.
+
+    Query Parameters:
+
+    name: Name of user.
+    address: Address of user.
+    phone: Phone number of user.
+    agencyid: ID of agency.
+    Returns:
+
+    "request has been initiated" if successful.
+
+    """
     req = syncUp(form_data)
     try:
         send_sms(
@@ -68,11 +98,30 @@ def reqUp(form_data: user_req_agency_form = Depends()):
 
 @app.get(prefix + "/get_request", tags=["Agencies", "User"])
 def disreq():
+    """
+        Get all update requests.
+
+    Returns:
+
+    List of dictionaries containing request information.
+    """
     return getreq()
 
 
 @app.get(prefix + "/ag_response", tags=["Agencies"])
 def agresp(data: response_form = Depends()):
+
+    """
+        Respond to user's update request.
+
+    Query Parameters:
+
+    reqid: ID of request.
+    status: Status of request.
+    Returns:
+
+    "response has been sent to the applicant" if successful.
+    """
     req = ag_res(data)
     try:
         if req:
@@ -104,6 +153,19 @@ def agresp(data: response_form = Depends()):
 
 @app.post(prefix + "/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+
+    """
+        Get access token.
+
+    Request Body:
+
+    username: Username of user.
+    password: Password of user.
+    Returns:
+
+    access_token: JWT token for authentication.
+    token_type: Type of token (Bearer).
+    """
     try:
         fake_users_db = get_u()
         user = authenticate_user(fake_users_db, form_data.username, form_data.password)
