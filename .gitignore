@@ -5,6 +5,7 @@ adl
 .vscode/
 .idea/
 
+__pycache__
 # Vagrant
 .vagrant/
 
