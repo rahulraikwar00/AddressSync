@@ -12,124 +12,117 @@ Add badges from somewhere like: [shields.io](https://shields.io/)
 
 
 
-# Address Syncing System
+# Aadhaar Information Syncing System
 
-**This microservice aims to streamline the process of updating personal information across multiple documents. It uses the Aadhaar number as a base document, and allows users to request updates to be synced to other linked documents of their choice. The syncing system will notify and ask organizations to sync the updates from the Aadhaar document, and the organizations have the option to accept or reject the request with a valid reason for rejection. The user is notified about the status of their request and the updated details are fetched from the Digi locker by the organization. To ensure security, the syncing system is incorporated internally into UIDAI's system.**
+Welcome to our Address Information Syncing System, a microservice designed to simplify the process of updating personal information across multiple documents. This system utilizes the Aadhaar number as the primary document, allowing users to request updates that will be synchronized with other linked documents of their choosing.
 
-**Features**
- User registration: Allows agencies to register for the service by providing their agency name, email, password, and confirm password.
-Sending update requests: Allows users to send requests to update their address information, which will be sent to the selected agencies for approval or rejection.
-Agency response: Enables agencies to view and respond to update requests, either approving or rejecting the request with a valid reason for rejection.
-Data retrieval: Provides functionality for both users and agencies to retrieve data on agencies and update requests.
-SMS notifications: Sends SMS notifications to users and agencies regarding the status of update requests.
-Secure authentication: Uses OAuth2 and JWT for authentication and authorization.
-Internal representation of request status: Uses an internal representation of request status, with a value of 0 for pending, -1 for rejection, and 1 for approval.
-FastAPI and Twilio integration: Built using FastAPI and utilizes Twilio as a message service.
+## Key Features
 
+1. **User Registration**: Agencies can seamlessly register for the service by providing essential details such as agency name, email, password, and confirmation.
 
+2. **Update Requests**: Users have the ability to submit requests to update their address information. These requests are then sent to selected agencies for approval or rejection.
 
-|Parameter|	Type|	Description|
-|api_key	|string |Required. Your API key.|
-|request_id	|string|	Required. The ID of the update request being responded to.|
-|response|	string|	Required. The agency's response to the request, either "approve" or "decline".|
-|reason	|string	|Optional. A valid reason for declining the request, if applicable.
+3. **Agency Responses**: Agencies can conveniently view and respond to update requests, either approving or rejecting them along with a valid reason for rejection.
 
+4. **Data Retrieval**: The system offers functionality for both users and agencies to retrieve information on registered agencies and update requests.
 
-## License
+5. **SMS Notifications**: Stay informed with SMS notifications that keep users and agencies in the loop regarding the status of their update requests.
 
-[MIT](https://choosealicense.com/licenses/mit/)
+6. **Secure Authentication**: Our system prioritizes security by implementing OAuth2 and JWT for robust authentication and authorization.
+
+7. **Internal Request Status Representation**: Utilizes an internal representation of request status, with 0 indicating a pending status, -1 for rejection, and 1 for approval.
+
+8. **FastAPI and Twilio Integration**: Leveraging the power of FastAPI for seamless API development and Twilio for efficient messaging services.
+
+Feel free to explore the functionalities and experience the efficiency of our Aadhaar Information Syncing System.
 
 
 
-## API Reference
+## Table of Contents
+- [Aadhaar Information Syncing System](#aadhaar-information-syncing-system)
+  - [Key Features](#key-features)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Endpoints](#endpoints)
+  - [Data Models](#data-models)
+  - [Configuration](#configuration)
+  - [Contributing](#contributing)
+  - [License](#license)
 
-#### Get all items
-Endpoints
-Copy code
-POST /register
-Parameter	Type	Description
-agency_name	string	Required. The agency name.
-email	string	Required. The agency's email address.
-password	string	Required. The agency's password.
-confirm_password	string	Required. Confirmation of the agency's password.
-Copy code
-GET /get_data_of_agencies
-Parameter	Type	Description
-api_key	string	Required. Your API key.
-Copy code
-POST /send_update_request
-Parameter	Type	Description
-api_key	string	Required. Your API key.
-customer_id	string	Required. The customer's account number or unique identifier.
-agency_id	string	Required. The ID of the agency to which the update request is being sent.
-Copy code
-GET /get_request
-Parameter	Type	Description
-api_key	string	Required. Your API key.
-Copy code
-POST /ag_response
-Parameter	Type	Description
-api_key	string	Required. Your API key.
-request_id	string	Required. The ID of the update request being responded to.
-response	string	Required. The agency's response to the request, either "approve" or "decline".
-reason	string	Optional. A valid reason for declining the request, if applicable.
+## Installation
 
+1. Clone the repository:
 
+   ```bash
+   git clone https://github.com/yourusername/your-repo.git
+   cd your-repo
+   ```
 
+2. Create a virtual environment:
 
+   ```bash
+   python -m venv venv
+   ```
 
-Endpoints
-/register: Allows agencies to register for the service by providing their agency name, email, password, and confirm password.
-/send_update_request: Allows users to send requests to update their address information.
-/get_request: Provides functionality for both users and agencies to retrieve data on agencies and update requests.
-/ag_response: Enables agencies to view and respond to update requests, either approving or rejecting the request with a valid reason for rejection.
-Authentication
-The service uses OAuth2 and JWT for authentication and authorization. Users and agencies must obtain and use the required authentication credentials in order to use the API.
+3. Activate the virtual environment:
 
-Example usage
-```python
-import requests
+   On Linux or macOS:
 
-# Send an update request
-data = {
-    "custid": "123456",
-    "agencyid": "agency1",
-    "add": "new address"
-}
+   ```bash
+   source venv/bin/activate
+   ```
 
-response = requests.post("http://localhost:8000/send_update_request", data=data)
-print(response.text)
+   On Windows:
 
-# Get request data
-response = requests.get("http://localhost:8000/get_request")
-print(response.json())
+   ```bash
+   venv\Scripts\activate
+   ```
 
-# Respond to a request
-data = {
-    "reqid": "123456",
-    "agencyid": "agency1",
-    "status": "1"
-}
+4. Install dependencies:
 
-response = requests.post("http://localhost:8000/ag_response", data=data)
-print(response.text
+   ```bash
+   pip install -r requirements.txt
+   ```
 
+## Usage
 
+Run the FastAPI application:
+
+```bash
+uvicorn main:app --reload
 ```
 
+Visit [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser or use a tool like [httpie](https://httpie.io/) or [curl](https://curl.se/) to interact with the API.
+
+## Endpoints
+
+Describe the available API endpoints and their functionalities.
+
+- `GET /`: Brief description.
+- `POST /users/`: Create a new user.
+- `POST /agencies/`: Create a new agency.
+- ...
+
+## Data Models
+
+Explain the data models used in your application.
+
+- `User`: Description of the User model.
+- `Agency`: Description of the Agency model.
+- `ActiveRequest`: Description of the ActiveRequest model.
+
+## Configuration
+
+Explain any configuration settings or environment variables that need to be set.
+
+- `DATABASE_URL`: Database connection URL.
+- ...
 
 
-evelopment
-To set up a development environment for the API, follow these steps:
+## Contributing
 
-Install the required dependencies by running pip install -r requirements.txt.
-Set up a local database by running the cr_db() function on startup.
-Set the environment variables for the Twilio API key and phone number.
-Run the API by executing uvicorn main:app --reload.
-License
-The API is released under the MIT license. You are free to use, modify, and distribute the API as long as you include the original copyright and license notice in any copies.
+Explain how others can contribute to your project. Include guidelines for submitting issues, feature requests, and pull requests.
+## License
 
-
-## Documentation
-
-[Documentation](https://linktodocumentation)
+This project is licensed under the [License Name] License - see the [LICENSE](LICENSE) file for details.
