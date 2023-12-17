@@ -11,7 +11,6 @@ Add badges from somewhere like: [shields.io](https://shields.io/)
 ![Logo](https://i.imgur.com/PQPfHuh.jpg)
 
 
-
 # Aadhaar Information Syncing System
 
 Welcome to our Address Information Syncing System, a microservice designed to simplify the process of updating personal information across multiple documents. This system utilizes the Aadhaar number as the primary document, allowing users to request updates that will be synchronized with other linked documents of their choosing.
