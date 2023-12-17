@@ -18,19 +18,19 @@ Welcome to our Address Information Syncing System, a microservice designed to si
 
 ## Key Features
 
-1. **User Registration**: Agencies can seamlessly register for the service by providing essential details such as agency name, email, password, and confirmation.
+1. [x] **User Registration**: Agencies can seamlessly register for the service by providing essential details such as agency name, email, password, and confirmation.
 
-2. **Update Requests**: Users have the ability to submit requests to update their address information. These requests are then sent to selected agencies for approval or rejection.
+2. [x] **Update Requests**: Users have the ability to submit requests to update their address information. These requests are then sent to selected agencies for approval or rejection.
 
-3. **Agency Responses**: Agencies can conveniently view and respond to update requests, either approving or rejecting them along with a valid reason for rejection.
+3. [x] **Agency Responses**: Agencies can conveniently view and respond to update requests, either approving or rejecting them along with a valid reason for rejection.
 
-4. **Data Retrieval**: The system offers functionality for both users and agencies to retrieve information on registered agencies and update requests.
+4. [x] **Data Retrieval**: The system offers functionality for both users and agencies to retrieve information on registered agencies and update requests.
 
-5. **SMS Notifications**: Stay informed with SMS notifications that keep users and agencies in the loop regarding the status of their update requests.
+5. [ ] **SMS Notifications**: Stay informed with SMS notifications that keep users and agencies in the loop regarding the status of their update requests.
 
-6. **Secure Authentication**: Our system prioritizes security by implementing OAuth2 and JWT for robust authentication and authorization.
+6. [ ] **Secure Authentication**: Our system prioritizes security by implementing OAuth2 and JWT for robust authentication and authorization.
 
-7. **Internal Request Status Representation**: Utilizes an internal representation of request status, with 0 indicating a pending status, -1 for rejection, and 1 for approval.
+7. [x] **Internal Request Status Representation**: Utilizes an internal representation of request status, with `active` indicating a pending status, `reject` for rejection, and `accept` for approval.
 
 8. **FastAPI and Twilio Integration**: Leveraging the power of FastAPI for seamless API development and Twilio for efficient messaging services.
 
