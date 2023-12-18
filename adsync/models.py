@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, create_engine
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -6,10 +8,11 @@ Base = declarative_base()
 
 # Create the SQLAlchemy engine (replace 'sqlite:///:memory:' with your actual database URL)
 # DATABASE_URL = 'sqlite:///:memory:'
-
-DATABASE_URL = 'sqlite:///test.db'
+load_dotenv()
+database_url = os.environ.get("DATABASE_URL")
+print(database_url)
 # sqlite:///test.db
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(database_url, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 
 
