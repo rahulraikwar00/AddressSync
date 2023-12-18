@@ -1,5 +1,5 @@
 # Create a new user
-POST http://localhost:8000/users/
+POST http://localhost:8000/users/register
 Content-Type: application/json
 
 {
@@ -9,7 +9,7 @@ Content-Type: application/json
 }
 
 ### Create a new agency
-POST http://localhost:8000/agencies/
+POST http://localhost:8000/agency/register
 Content-Type: application/json
 
 {
@@ -23,14 +23,14 @@ GET  http://localhost:8000/
 
 
 ### Get active requests for a specific agency
-GET http://localhost:8000/active-request-for-agency/agency124
+GET http://localhost:8000/active-requests/agency124
 
 ### Create an active request
-POST http://localhost:8000/active-requests/
+POST http://localhost:8000/requests/Create-requests
 Content-Type: application/json
 
 {
   "user_aadhaarnumber": 123456783,
-  "agency_id": "agency123",
+  "agency_id": "agency124",
   "new_address": "New Address for User 123456789"
 }
