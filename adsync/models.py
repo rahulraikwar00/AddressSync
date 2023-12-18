@@ -1,9 +1,10 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, create_engine
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, create_engine, CheckConstraint
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 import hashlib
+from datetime import datetime
 Base = declarative_base()
 
 # Create the SQLAlchemy engine (replace 'sqlite:///:memory:' with your actual database URL)
@@ -38,14 +39,23 @@ class ActiveRequest(Base):
     user_aadhaarnumber = Column(Integer, ForeignKey('users.aadhaarnumber'))
     agency_id = Column(String, ForeignKey('agencies.agency_id'))
     new_address = Column(String)
-    status = Column(String, default="Active")
+    status = Column(String, default="pending")
 
-    UniqueConstraint('user_aadhaarnumber', 'agency_id', name='unique_user_agency_request')
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'approved', 'rejected')",
+            name='check_valid_status'
+        ),
+        CheckConstraint(
+            "(status = 'pending' AND user_aadhaarnumber IS NOT NULL AND agency_id IS NOT NULL) OR status <> 'pending'",
+            name='conditional_unique_user_agency_request'
+        ),
+    )
 
     user = relationship('User')
     agency = relationship('Agency', back_populates='active_requests')
 
-    def __init__(self, user_aadhaarnumber, agency_id, new_address, status="Active"):
+    def __init__(self, user_aadhaarnumber, agency_id, new_address, status="pending"):
         self.requid = self.generate_request_id(user_aadhaarnumber, agency_id)
         self.user_aadhaarnumber = user_aadhaarnumber
         self.agency_id = agency_id
@@ -55,7 +65,7 @@ class ActiveRequest(Base):
     @staticmethod
     def generate_request_id(aadhaarnumber, agency_id):
         # Combine Aadhaar number and agency ID as a string
-        combined_string = f"{str(aadhaarnumber)}-{agency_id}"
+        combined_string = f"{str(aadhaarnumber)}-{agency_id}-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
         # Initialize hashlib object
         sha256_hash = hashlib.sha256()

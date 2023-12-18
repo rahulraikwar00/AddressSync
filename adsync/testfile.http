@@ -1,14 +1,18 @@
-# Create a new user
+# 1. Create a new user
+# ---------------------
 POST http://localhost:8000/users/register
 Content-Type: application/json
 
 {
-  "aadhaarnumber": 123456789,
+  "aadhaarnumber": 4123456789,
   "password_hash": "password123",
   "new_address": "434 street NY"
 }
+# Description: Creates a new user with the specified Aadhaar number, password hash, and new address.
 
-### Create a new agency
+
+# 2. Create a new agency
+# -----------------------
 POST http://localhost:8000/agency/register
 Content-Type: application/json
 
@@ -16,21 +20,42 @@ Content-Type: application/json
   "agency_id": "agency2",
   "password_hash": "agency_password"
 }
-
-###
-
-GET  http://localhost:8000/
+# Description: Creates a new agency with the specified agency ID and password hash.
 
 
-### Get active requests for a specific agency
+# 3. Get all entities (users, agencies, requests)
+# -----------------------------------------------
+GET http://localhost:8000/
+# Description: Retrieves information about all entities (users, agencies, requests) in the system.
+
+
+# 4. Get active requests for a specific agency
+# --------------------------------------------
 GET http://localhost:8000/requests/active-requests/agency2
+# Description: Retrieves a list of active requests for the agency with the ID "agency2."
 
-### Create an active request
+
+# 5. Create an active request
+# ---------------------------
 POST http://localhost:8000/requests/Create-requests
 Content-Type: application/json
 
 {
-  "user_aadhaarnumber": 661234567873,
+  "user_aadhaarnumber": 4123456789,
   "agency_id": "agency2",
   "new_address": "New Address for User 123456789"
 }
+# Description: Creates a new active request for the user with Aadhaar number 4123456789 and the agency with the ID "agency2," specifying a new address.
+
+
+# 6. Update request status
+# -------------------------
+POST http://localhost:8000/requests/update-request-status
+Content-Type: application/json
+
+{
+  "requid" :"7f4f192989a0f2a3a1f4ac546f1d3b47e5206b3108422c30609a3a6bf93a66f6",
+  "agency_id": "agency2",
+  "status" : "rejected"
+}
+# Description: Updates the status of the request with the given "requid" to "rejected" for the agency with the ID "agency2."

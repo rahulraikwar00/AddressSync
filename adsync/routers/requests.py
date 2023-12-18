@@ -1,7 +1,7 @@
 # routers/active_requests.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import ActiveRequest, Agency, SessionLocal
+from models import ActiveRequest, Agency, SessionLocal, User
 from pydantic import BaseModel
 from logging_config import logging
 
@@ -37,7 +37,8 @@ async def get_active_request_for_agency(agency_id: str, db: Session = Depends(ge
 
     # Return the list of active requests
     return [
-        {
+        {   
+            "agency_id": agency_id,
             "requid": request.requid,
             "user_aadhaarnumber": request.user_aadhaarnumber,
             "new_address": request.new_address,
@@ -55,12 +56,17 @@ async def create_active_request(request_data: RequestCreate, db: Session = Depen
 
     # Check if the agency exists
     agency = db.query(Agency).filter(Agency.agency_id == request_data.agency_id).first()
+    user = db.query(User).filter(request_data.user_aadhaarnumber==User.aadhaarnumber).first()
+
 
     if not agency:
         raise HTTPException(status_code=404, detail="Agency not found")
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
     
     existing_request = db.query(ActiveRequest).filter(ActiveRequest.user_aadhaarnumber == request_data.user_aadhaarnumber,
-        ActiveRequest.agency_id == request_data.agency_id
+        ActiveRequest.agency_id == request_data.agency_id,
+        ActiveRequest.status == 'pending'  
     ).first()
 
     if existing_request:
