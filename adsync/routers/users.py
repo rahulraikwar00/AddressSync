@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models import User, SessionLocal
 from pydantic import BaseModel
+from logging_config import logging
 
 router = APIRouter()
 
@@ -20,6 +21,7 @@ class UserCreate(BaseModel):
 
 @router.post("/register/")
 async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    logging.info("Received request to create a new user.")
     # Check if the aadhaarnumber already exists
     existing_user = db.query(User).filter(User.aadhaarnumber == user_data.aadhaarnumber).first()
     if existing_user:

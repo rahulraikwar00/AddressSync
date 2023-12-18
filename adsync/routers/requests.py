@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models import ActiveRequest, Agency, SessionLocal
 from pydantic import BaseModel
+from logging_config import logging
 
 router = APIRouter()
 
@@ -21,6 +22,7 @@ class RequestCreate(BaseModel):
 
 @router.get("/active-requests/{agency_id}")
 async def get_active_request_for_agency(agency_id: str, db: Session = Depends(get_db)):
+    logging.info(f"Fetching active requests for agency {agency_id} from the database.")
     # Check if the agency exists
     agency = db.query(Agency).filter(Agency.agency_id == agency_id).first()
 
@@ -49,11 +51,23 @@ async def get_active_request_for_agency(agency_id: str, db: Session = Depends(ge
 
 @router.post("/Create-requests/")
 async def create_active_request(request_data: RequestCreate, db: Session = Depends(get_db)):
+    logging.info("Received request to create a new active request.")
+
     # Check if the agency exists
     agency = db.query(Agency).filter(Agency.agency_id == request_data.agency_id).first()
 
     if not agency:
         raise HTTPException(status_code=404, detail="Agency not found")
+    
+    existing_request = db.query(ActiveRequest).filter(ActiveRequest.user_aadhaarnumber == request_data.user_aadhaarnumber,
+        ActiveRequest.agency_id == request_data.agency_id
+    ).first()
+
+    if existing_request:
+        raise HTTPException(
+            status_code=422,
+            detail="There is already an active request for this user and agency."
+        )
 
     # Create the active request
     active_request = ActiveRequest(
@@ -66,3 +80,25 @@ async def create_active_request(request_data: RequestCreate, db: Session = Depen
     db.refresh(active_request)
 
     return active_request
+
+class UpdateRequest(BaseModel):
+    status:str
+    agency_id:str
+    requid:str
+
+@router.post('/update-request-status')
+async def update_request(update_data: UpdateRequest, db: Session = Depends(get_db)):
+    # Check if the request with the provided requid exists
+    request_to_update = db.query(ActiveRequest).filter(ActiveRequest.requid == update_data.requid).first()
+
+    if request_to_update:
+        # Update the status of the request
+        request_to_update.status = update_data.status
+        db.commit()
+        db.refresh(request_to_update)
+        return {"message": "Request status updated successfully","request_data":{
+            request_to_update
+        }}
+    else:
+        # Return an error response if the request does not exist
+        raise HTTPException(status_code=404, detail="Request not found")

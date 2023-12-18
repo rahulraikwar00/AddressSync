@@ -13,7 +13,7 @@ POST http://localhost:8000/agency/register
 Content-Type: application/json
 
 {
-  "agency_id": "agency124",
+  "agency_id": "agency2",
   "password_hash": "agency_password"
 }
 
@@ -23,14 +23,14 @@ GET  http://localhost:8000/
 
 
 ### Get active requests for a specific agency
-GET http://localhost:8000/active-requests/agency124
+GET http://localhost:8000/requests/active-requests/agency2
 
 ### Create an active request
 POST http://localhost:8000/requests/Create-requests
 Content-Type: application/json
 
 {
-  "user_aadhaarnumber": 123456783,
-  "agency_id": "agency124",
+  "user_aadhaarnumber": 661234567873,
+  "agency_id": "agency2",
   "new_address": "New Address for User 123456789"
 }
