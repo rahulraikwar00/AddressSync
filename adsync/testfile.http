@@ -4,14 +4,14 @@ POST http://localhost:8000/users/register
 Content-Type: application/json
 
 {
-  "aadhaarnumber": 4123456789,
+  "aadhaarnumber": 41234567889,
   "password_hash": "password123",
   "new_address": "434 street NY"
 }
 # Description: Creates a new user with the specified Aadhaar number, password hash, and new address.
 
 
-# 2. Create a new agency
+### 2. Create a new agency
 # -----------------------
 POST http://localhost:8000/agency/register
 Content-Type: application/json
@@ -23,19 +23,20 @@ Content-Type: application/json
 # Description: Creates a new agency with the specified agency ID and password hash.
 
 
-# 3. Get all entities (users, agencies, requests)
+
+### 3. Get all entities (users, agencies, requests)
 # -----------------------------------------------
 GET http://localhost:8000/
 # Description: Retrieves information about all entities (users, agencies, requests) in the system.
 
 
-# 4. Get active requests for a specific agency
+#### 4. Get active requests for a specific agency
 # --------------------------------------------
 GET http://localhost:8000/requests/active-requests/agency2
 # Description: Retrieves a list of active requests for the agency with the ID "agency2."
 
 
-# 5. Create an active request
+### 5. Create an active request
 # ---------------------------
 POST http://localhost:8000/requests/Create-requests
 Content-Type: application/json

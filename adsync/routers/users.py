@@ -1,7 +1,7 @@
 # routers/users.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import User, SessionLocal
+from database.models import User, SessionLocal
 from pydantic import BaseModel
 from logging_config import logging
 

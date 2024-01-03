@@ -1,7 +1,7 @@
 # routers/agencies.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import Agency, SessionLocal
+from database.models import Agency, SessionLocal
 from pydantic import BaseModel
 from logging_config import logging
 
