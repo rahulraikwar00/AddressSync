@@ -7,7 +7,6 @@
 	import { curretUser } from '$lib/components/ui/stores.js';
 	import { onMount } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
-
 	onMount(() => {
 		if ($curretUser === 'User') {
 			goto('/');
@@ -20,8 +19,7 @@
 		<Card.Header class="flex flex-col justify-between gap-2">
 			<Card.Title class="mb-0 self-center text-3xl">Login As {$curretUser}</Card.Title>
 			<Card.Description class="mt-0 flex gap-2 self-center"
-				>Make sure to enter valid aadhaar number</Card.Description
-			>
+				>Make sure to enter valid aadhaar number</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<form>
@@ -32,14 +30,16 @@
 					</div>
 					<div>
 						<Checkbox id="terms" />
-						<Label for="terms">
+						<Label
+							for="terms"
+							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+						>
 							I agree to allow the use of my Aadhaar details for KYC information.
 						</Label>
 					</div>
-
 					<div class="flex flex-col space-y-1.5">
 						<Button class="text-lg hover:bg-teal-600">Continue with Digilocker</Button>
-					</div>
+					<div class="mb-4 flex items-center gap-4"></div>
 				</div>
 			</form>
 		</Card.Content>
