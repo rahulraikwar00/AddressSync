@@ -11,106 +11,117 @@ Add badges from somewhere like: [shields.io](https://shields.io/)
 ![Logo](https://i.imgur.com/PQPfHuh.jpg)
 
 
-# Adlink
+# Aadhaar Information Syncing System
 
-Adlink API is a FastAPI-based RESTful API providing endpoints for registering agencies, updating requests for users, and responding to those requests for agencies. It also includes endpoints for getting data of agencies and requests, and generating access tokens. The API documentation is available through Swagger UI, and it provides detailed descriptions for each endpoint.
+Welcome to our Address Information Syncing System, a microservice designed to simplify the process of updating personal information across multiple documents. This system utilizes the Aadhaar number as the primary document, allowing users to request updates that will be synchronized with other linked documents of their choosing.
+
+## Key Features
+
+1. [x] **User Registration**: Agencies can seamlessly register for the service by providing essential details such as agency name, email, password, and confirmation.
+
+2. [x] **Update Requests**: Users have the ability to submit requests to update their address information. These requests are then sent to selected agencies for approval or rejection.
+
+3. [x] **Agency Responses**: Agencies can conveniently view and respond to update requests, either approving or rejecting them along with a valid reason for rejection.
+
+4. [x] **Data Retrieval**: The system offers functionality for both users and agencies to retrieve information on registered agencies and update requests.
+
+5. [ ] **SMS Notifications**: Stay informed with SMS notifications that keep users and agencies in the loop regarding the status of their update requests.
+
+6. [ ] **Secure Authentication**: Our system prioritizes security by implementing OAuth2 and JWT for robust authentication and authorization.
+
+7. [x] **Internal Request Status Representation**: Utilizes an internal representation of request status, with `active` indicating a pending status, `reject` for rejection, and `accept` for approval.
+
+8. **FastAPI and Twilio Integration**: Leveraging the power of FastAPI for seamless API development and Twilio for efficient messaging services.
+
+Feel free to explore the functionalities and experience the efficiency of our Aadhaar Information Syncing System.
+
+
 
 ## Table of Contents
-
-- [Installation](#installation)
-- [Usage](#usage)
-- [Endpoints](#endpoints)
-- [Contributing](#contributing)
-- [License](#license)
+- [Aadhaar Information Syncing System](#aadhaar-information-syncing-system)
+  - [Key Features](#key-features)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Endpoints](#endpoints)
+  - [Data Models](#data-models)
+  - [Configuration](#configuration)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Installation
 
 1. Clone the repository:
 
-    ```bash
-    git clone <repository-url>
-    cd adlink-api
-    ```
+   ```bash
+   git clone https://github.com/yourusername/your-repo.git
+   cd your-repo
+   ```
 
-2. Install dependencies:
+2. Create a virtual environment:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+   ```bash
+   python -m venv venv
+   ```
 
-3. Run the FastAPI application:
+3. Activate the virtual environment:
 
-    ```bash
-    uvicorn main:app --reload
-    ```
+   On Linux or macOS:
+
+   ```bash
+   source venv/bin/activate
+   ```
+
+   On Windows:
+
+   ```bash
+   venv\Scripts\activate
+   ```
+
+4. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
 
-Once the application is running, you can access the Swagger UI documentation at `http://127.0.0.1:8000/api/v1/docs` and ReDoc documentation at `http://127.0.0.1:8000/api/v1/redoc` for detailed information on available endpoints and their usage.
+Run the FastAPI application:
+
+```bash
+uvicorn main:app --reload
+```
+
+Visit [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser or use a tool like [httpie](https://httpie.io/) or [curl](https://curl.se/) to interact with the API.
 
 ## Endpoints
 
-### Register New Agency
+Describe the available API endpoints and their functionalities.
 
-- **Endpoint:** `POST /api/v1/register`
-- **Description:** Register a new agency.
-- **Request Body:**
-  - `agency`: An instance of the agency schema.
-- **Response:**
-  - `"data uploaded"` if successful.
-  - `"wrong confirm pass"` if the password and confirm password do not match.
+- `GET /`: Brief description.
+- `POST /users/`: Create a new user.
+- `POST /agencies/`: Create a new agency.
+- ...
 
-### Send Update Request
+## Data Models
 
-- **Endpoint:** `GET /api/v1/send_update_request`
-- **Description:** Send an update request for a user's address.
-- **Query Parameters:**
-  - `name`: Name of the user.
-  - `address`: Address of the user.
-  - `phone`: Phone number of the user.
-  - `agencyid`: ID of the agency.
-- **Response:**
-  - `"request has been initiated"` if successful.
+Explain the data models used in your application.
 
-### Get Update Requests
+- `User`: Description of the User model.
+- `Agency`: Description of the Agency model.
+- `ActiveRequest`: Description of the ActiveRequest model.
 
-- **Endpoint:** `GET /api/v1/get_request`
-- **Description:** Get all update requests.
-- **Response:**
-  - List of dictionaries containing request information.
+## Configuration
 
-### Respond to Update Request
+Explain any configuration settings or environment variables that need to be set.
 
-- **Endpoint:** `GET /api/v1/ag_response`
-- **Description:** Respond to a user's update request.
-- **Query Parameters:**
-  - `reqid`: ID of the request.
-  - `status`: Status of the request.
-- **Response:**
-  - `"response has been sent to the applicant"` if successful.
+- `DATABASE_URL`: Database connection URL.
+- ...
 
-### Get Data of All Agencies
-
-- **Endpoint:** `GET /api/v1/get_data_of_agencies`
-- **Description:** Get data of all agencies.
-- **Response:**
-  - List of dictionaries containing agency information.
-
-### Get Access Token
-
-- **Endpoint:** `POST /api/v1/token`
-- **Description:** Get an access token.
-- **Request Body:**
-  - `username`: Username of the user.
-  - `password`: Password of the user.
-- **Response:**
-  - JSON object containing `access_token` and `token_type`.
 
 ## Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
+Explain how others can contribute to your project. Include guidelines for submitting issues, feature requests, and pull requests.
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-
+This project is licensed under the [License Name] License - see the [LICENSE](LICENSE) file for details.
