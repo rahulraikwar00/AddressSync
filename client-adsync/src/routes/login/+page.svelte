@@ -19,27 +19,46 @@
 		<Card.Header class="flex flex-col justify-between gap-2">
 			<Card.Title class="mb-0 self-center text-3xl">Login As {$curretUser}</Card.Title>
 			<Card.Description class="mt-0 flex gap-2 self-center"
-				>Make sure to enter valid aadhaar number</Card.Description>
+				>Make sure to enter valid {$curretUser === 'Requester'
+					? 'Aadhaar Number'
+					: 'Organization Id'}</Card.Description
+			>
 		</Card.Header>
 		<Card.Content>
 			<form>
 				<div class="grid w-full items-center gap-4">
 					<div class="grid w-full max-w-sm items-center gap-1.5">
-						<Label for="email">Aadhaar Number</Label>
-						<Input type="email" id="email" placeholder="1111-2222-3333" />
-					</div>
-					<div>
-						<Checkbox id="terms" />
-						<Label
-							for="terms"
-							class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+						<Label for="email"
+							>{$curretUser === 'Requester' ? 'Aadhaar Number' : 'Organization Id'}</Label
 						>
-							I agree to allow the use of my Aadhaar details for KYC information.
-						</Label>
+						<Input
+							type="email"
+							id="email"
+							placeholder={$curretUser === 'Requester' ? '1111-2222-3333' : 'ABc123'}
+						/>
 					</div>
+
+					{#if !($curretUser === 'Requester')}
+						<div class="grid w-full max-w-sm items-center gap-1.5">
+							<Label for="password">Password</Label>
+							<Input type="password" id="password" placeholder="********" />
+						</div>
+					{/if}
+					{#if $curretUser === 'Requester'}
+						<div>
+							<Checkbox id="terms" />
+							<Label for="terms">
+								I agree to allow the use of my Aadhaar details for KYC information.
+							</Label>
+						</div>
+					{/if}
 					<div class="flex flex-col space-y-1.5">
-						<Button class="text-lg hover:bg-teal-600">Continue with Digilocker</Button>
-					<div class="mb-4 flex items-center gap-4"></div>
+						<Button class="text-lg hover:bg-teal-600"
+							>{$curretUser === 'Accepter'
+								? 'Continue With credentials'
+								: 'Continue with Digilocker'}</Button
+						>
+					</div>
 				</div>
 			</form>
 		</Card.Content>
