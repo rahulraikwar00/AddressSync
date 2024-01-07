@@ -7,7 +7,6 @@
 	import { curretUser } from '$lib/components/ui/stores.js';
 	import { onMount } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
-
 	onMount(() => {
 		if ($curretUser === 'User') {
 			goto('/');
