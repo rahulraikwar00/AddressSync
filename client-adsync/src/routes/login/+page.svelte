@@ -7,6 +7,7 @@
 	import { curretUser } from '$lib/components/ui/stores.js';
 	import { onMount } from 'svelte';
 	import { Input } from '$lib/components/ui/input';
+
 	onMount(() => {
 		if ($curretUser === 'User') {
 			goto('/');
@@ -14,11 +15,11 @@
 	});
 </script>
 
-<div class="flex h-screen w-full flex-col items-center justify-center">
-	<Card.Root class="w-[400px] shadow-sm">
+<div class="flex h-screen w-full flex-col items-center justify-center font-mono">
+	<Card.Root class="w-[350px] shadow-sm">
 		<Card.Header class="flex flex-col justify-between gap-2">
-			<Card.Title class="mb-0 self-center text-3xl">Login As {$curretUser}</Card.Title>
-			<Card.Description class="mt-0 flex gap-2 self-center"
+			<Card.Title class="self-center text-3xl">Login As {$curretUser}</Card.Title>
+			<Card.Description class="flex gap-2 self-center"
 				>Make sure to enter valid {$curretUser === 'Requester'
 					? 'Aadhaar Number'
 					: 'Organization Id'}</Card.Description
@@ -32,6 +33,8 @@
 							>{$curretUser === 'Requester' ? 'Aadhaar Number' : 'Organization Id'}</Label
 						>
 						<Input
+							class="bg-input"
+
 							type="email"
 							id="email"
 							placeholder={$curretUser === 'Requester' ? '1111-2222-3333' : 'ABc123'}
@@ -41,7 +44,8 @@
 					{#if !($curretUser === 'Requester')}
 						<div class="grid w-full max-w-sm items-center gap-1.5">
 							<Label for="password">Password</Label>
-							<Input type="password" id="password" placeholder="********" />
+							<Input type="password" id="password" placeholder="*********" class="bg-input" />
+
 						</div>
 					{/if}
 					{#if $curretUser === 'Requester'}
@@ -53,7 +57,7 @@
 						</div>
 					{/if}
 					<div class="flex flex-col space-y-1.5">
-						<Button class="text-lg hover:bg-teal-600"
+						<Button class="text-lg "
 							>{$curretUser === 'Accepter'
 								? 'Continue With credentials'
 								: 'Continue with Digilocker'}</Button

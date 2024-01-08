@@ -10,6 +10,7 @@ Base = declarative_base()
 # Create the SQLAlchemy engine (replace 'sqlite:///:memory:' with your actual database URL)
 # DATABASE_URL = 'sqlite:///:memory:'
 load_dotenv()
+
 database_url = os.environ.get("DATABASE_URL")
 print(database_url)
 engine = create_engine(database_url)
