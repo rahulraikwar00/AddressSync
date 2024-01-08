@@ -36,5 +36,6 @@
 			Join <a href="/" class="font-bold underline">Adsync</a> and elevate your address management experience.
 			Welcome to a world of secure, fast, and efficient syncing.
 		</p>
+
 	</div>
 </section>

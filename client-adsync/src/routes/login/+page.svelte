@@ -34,6 +34,7 @@
 						>
 						<Input
 							class="bg-input"
+
 							type="email"
 							id="email"
 							placeholder={$curretUser === 'Requester' ? '1111-2222-3333' : 'ABc123'}
@@ -44,6 +45,7 @@
 						<div class="grid w-full max-w-sm items-center gap-1.5">
 							<Label for="password">Password</Label>
 							<Input type="password" id="password" placeholder="*********" class="bg-input" />
+
 						</div>
 					{/if}
 					{#if $curretUser === 'Requester'}
