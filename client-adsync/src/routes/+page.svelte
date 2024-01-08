@@ -2,6 +2,6 @@
 	import Home from '$lib/components/home.svelte';
 </script>
 
-<div class="flex flex-col justify-center items-center h-screen w-full">
+<div id="hero" class="w-full rounded-lg bg-green-100">
 	<Home></Home>
 </div>
