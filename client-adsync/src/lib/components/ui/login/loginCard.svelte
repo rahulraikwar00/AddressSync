@@ -7,9 +7,8 @@
 	import { writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
 	import { user } from '$lib/stores';
-	import { error } from '@sveltejs/kit';
 
-	const isButtonDisabled = writable(true);
+	const isButtonDisabled = writable(false);
 
 	// Function to toggle the disabled state
 	function toggleDisabledState() {
