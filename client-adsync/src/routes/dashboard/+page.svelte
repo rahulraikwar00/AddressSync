@@ -1,11 +1,10 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { user } from '$lib/stores';
-	import { Checkbox } from '$lib/components/ui/checkbox';
+
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { onMount } from 'svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import UnderConstruction from '$lib/components/ui/temp/under_construction.svelte';
 
 	onMount(() => {
 		if ($user === null) {
@@ -83,16 +82,16 @@
 <div class="flex flex-col items-center justify-center">
 	<h1 class="my-5 text-2xl">Welcome {$user}</h1>
 
-	<Tabs.Root value="Request-Status" class="lg:min-w-md">
+	<Tabs.Root value="Request-Status" class="items-center justify-center text-center w-5/6 lg:max-w-screen-md ">
 		<Tabs.List>
 			<Tabs.Trigger value="Request-Status">Request Status</Tabs.Trigger>
 			<Tabs.Trigger value="Send-Request">Send Request</Tabs.Trigger>
 		</Tabs.List>
 
-		<Tabs.Content value="Request-Status">
+		<Tabs.Content value="Request-Status" class="items-center justify-center  p-4 lg:w-full">
 			{#each requests as items}
 				<div
-					class="mb-2 flex max-w-md justify-around gap-1 rounded-lg p-2 shadow-md {getStatusColor(
+					class="min-w-sm mb-2 flex justify-around gap-1 rounded-lg p-2 shadow-md {getStatusColor(
 						items.status
 					)}"
 				>
@@ -117,9 +116,7 @@
 		</Tabs.Content>
 
 		<Tabs.Content value="Send-Request">
-			<form action="submit">
-				<div class="mb-4 flex flex-col gap-3"></div>
-			</form>
+			<UnderConstruction></UnderConstruction>
 		</Tabs.Content>
 	</Tabs.Root>
 </div>
