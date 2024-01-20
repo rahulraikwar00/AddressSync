@@ -7,7 +7,7 @@
 	});
 </script>
 
-<div class="hero">
+<div >
 	<div class="flex h-screen flex-col items-center justify-center lg:grid lg:grid-cols-5">
 		<section class="col-span-3 p-6 text-center">
 			<Herotext></Herotext>
