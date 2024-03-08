@@ -1,7 +1,9 @@
 # main.py
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from routers import agencies, users, requests
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -17,12 +19,16 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", include_in_schema=False)
 async def read_root():
-    return {"message": "Hello, World! and iam working"}
-app.include_router(requests.router, prefix='/requests', tags=["requests"])
-app.include_router(agencies.router, prefix="/agency", tags=["agencies"])
-app.include_router(users.router, prefix="/users", tags=["users"])
+    return FileResponse('static/home.html')
+
+app.include_router(requests.router, prefix='/requests', tags=["Requests"])
+app.include_router(agencies.router, prefix="/agency", tags=["Agencies"])
+app.include_router(users.router, prefix="/users", tags=["Users"])
 
 # if __name__ == "__main__":
 #     import uvicorn
