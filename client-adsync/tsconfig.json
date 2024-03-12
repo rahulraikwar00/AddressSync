@@ -10,8 +10,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
 		"paths": {
-			"@src/*": ["src/*"],
-			"@components/*": ["src/components/*"]
+			"@src/*": ["src/*"]
 			// Add other path aliases as needed
 		}
 	},
