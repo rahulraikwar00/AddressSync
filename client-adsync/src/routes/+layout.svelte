@@ -1,5 +1,11 @@
 <script>
+	import Footer from '$lib/component/footer.svelte';
 	import '../app.pcss';
+	import Header from '$lib/component/header.svelte';
 </script>
 
-<slot />
+<div class=" flex min-h-screen flex-col justify-between">
+	<Header />
+	<slot />
+	<Footer />
+</div>
