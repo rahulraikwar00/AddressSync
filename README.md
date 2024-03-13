@@ -89,7 +89,7 @@ Feel free to explore the functionalities and experience the efficiency of our Aa
 2. Build the Docker image:
 
    ```bash
-   docker build -t address-sync .
+   docker compose up --build
    ```
 
 3. Set environment variables:
