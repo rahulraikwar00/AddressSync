@@ -14,6 +14,10 @@ Add badges from somewhere like: [shields.io](https://shields.io/)
 
 Welcome to the Aadhaar Information Syncing System, a microservice designed to simplify the process of updating personal information across multiple documents. This system utilizes the Aadhaar number as the primary document, allowing users to request updates that will be synchronized with other linked documents of their choosing. The project consists of two main parts: the client-side and the server-side (addressSync).
 
+## Demo Screenshot
+![Address sync demo](https://github.com/rahulraikwar00/my-app/assets/54519734/92ab9d4a-97d7-4d30-9a5b-ff3cff91bc48)
+
+
 ## Client-Side
 
 The client-side of the project is built using SvelteKit and features a landing page that serves as the main interface for users to interact with the system.

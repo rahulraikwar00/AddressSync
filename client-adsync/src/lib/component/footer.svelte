@@ -8,7 +8,7 @@
 			<div class="mb-6 w-full md:mb-0 md:w-1/4">
 				<h2 class="mb-2 text-lg font-bold text-gray-800">Lunosis</h2>
 				<p class="text-gray-600">
-					A modern address management solution for businesses of all sizes.
+					The only address management solution for Goverment and Other Organisation
 				</p>
 			</div>
 			<div class="mb-6 w-full md:mb-0 md:w-1/4">

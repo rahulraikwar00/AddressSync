@@ -61,26 +61,4 @@
 			</div>
 		</div>
 	</div>
-
-	<section class="bg-white py-16">
-		<div class="container mx-auto px-4">
-			<div class="-mx-3 flex flex-wrap items-center">
-				<div class="mb-12 w-full px-3 md:mb-0 md:w-1/2">
-					<h2 class="mb-4 text-3xl font-bold text-gray-800">Try Our Application Demo</h2>
-					<p class="mb-6 text-gray-600">
-						Experience the power of our application with our interactive demo. See how easy it is to
-						manage your addresses and streamline your workflow.
-					</p>
-					<a
-						href="/demo"
-						class="inline-block rounded-md bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-700"
-						>Try the Demo</a
-					>
-				</div>
-				<div class="w-full px-3 md:w-1/2">
-					<img src={demo} alt="Demo Screenshot" class="w-full rounded-md shadow-md" />
-				</div>
-			</div>
-		</div>
-	</section>
 </div>
