@@ -1,36 +1,53 @@
 # routers/users.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database.models import User, SessionLocal
-from pydantic import BaseModel
-from logging_config import logging
+from core.database import get_db
+from models.user import User
+from core.security import get_password_hash, verify_password, create_token
+from services.auth import get_current_user
+from core.logging import ActivityLogger
 
-router = APIRouter()
+router = APIRouter(prefix="/users", tags=["Users"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-class UserCreate(BaseModel):
-    aadhaarnumber: int
-    password_hash: str
-    new_address: str
+@router.post("/register")
+def register_user(user_data: dict, db: Session = Depends(get_db)):
+    # Check if user exists
+    existing = db.query(User).filter(User.aadhaar_number ==
+                                     user_data["aadhaar_number"]).first()
+    if existing:
+        ActivityLogger.log_registration(
+            "user", user_data["aadhaar_number"], user_data["name"])
+        raise HTTPException(status_code=400, detail="User already exists")
 
-@router.post("/register/")
-async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
-    logging.info("Received request to create a new user.")
-    # Check if the aadhaarnumber already exists
-    existing_user = db.query(User).filter(User.aadhaarnumber == user_data.aadhaarnumber).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="User with this aadhaarnumber already exists")
-
-    # Create a new user
-    new_user = User(aadhaarnumber=user_data.aadhaarnumber, password_hash=user_data.password_hash, new_address=user_data.new_address)
-    db.add(new_user)
+    # Create user
+    user = User(
+        aadhaar_number=user_data["aadhaar_number"],
+        name=user_data["name"],
+        email=user_data["email"],
+        password_hash=get_password_hash(user_data["password"]),
+        current_address=user_data["current_address"]
+    )
+    db.add(user)
     db.commit()
-    db.refresh(new_user)
+    db.refresh(user)
+    ActivityLogger.log_registration("user", user.aadhaar_number, user.name)
+    return {"message": "User created", "user": user}
 
-    return new_user
+
+@router.post("/login")
+def login_user(login_data: dict, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.aadhaar_number ==
+                                 login_data["aadhaar_number"]).first()
+    if not user or not verify_password(login_data["password"], user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_token({"sub": user.aadhaar_number, "type": "user"})
+    ActivityLogger.log_login("user", user.aadhaar_number)
+    return {"access_token": token, "token_type": "bearer", "user": user}
+
+
+@router.get("/me")
+def get_me(current_user: User = Depends(get_current_user)):
+    ActivityLogger.log_user_action(current_user.aadhaar_number, "VIEW_PROFILE")
+    return current_user

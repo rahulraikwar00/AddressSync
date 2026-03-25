@@ -1,12 +1,24 @@
-version: "3"
+version: "3.8"
 
 services:
-  web:
+  address-sync-api:
     build: .
-    command: sh -c "uvicorn main:app --reload --port 8000 --host=0.0.0.0"
-    env_file:
-      - .env
+    container_name: address-sync-api
     ports:
-      - 8000:8000
+      - "8000:8000"
     volumes:
-      - .:/app
+      # Mount for hot reload during development
+      - ./:/app
+      # Persist database file
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///./data/address_sync.db
+      - SECRET_KEY=your-secret-key-change-in-production-123456789
+      - DEBUG=True
+    restart: unless-stopped
+    networks:
+      - address-sync-network
+
+networks:
+  address-sync-network:
+    driver: bridge
