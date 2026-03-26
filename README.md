@@ -1,158 +1,326 @@
-
-## Badges
-
-Add badges from somewhere like: [shields.io](https://shields.io/)
+# Address Sync System
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
-[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.0-009688.svg)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://docker.com)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)](https://sqlalchemy.org)
 
+![Address Sync System](https://i.imgur.com/PQPfHuh.jpg)
 
-![Logo](https://i.imgur.com/PQPfHuh.jpg)
+---
 
-# Aadhaar Information Syncing System
+## 📋 Overview
 
-Welcome to the Aadhaar Information Syncing System, a microservice designed to simplify the process of updating personal information across multiple documents. This system utilizes the Aadhaar number as the primary document, allowing users to request updates that will be synchronized with other linked documents of their choosing. The project consists of two main parts: the client-side and the server-side (addressSync).
+The **Address Sync System** is a microservice that simplifies updating address information across multiple agencies using Aadhaar as a unique identifier.
 
-## Demo Screenshot
-![Address sync demo](https://github.com/rahulraikwar00/my-app/assets/54519734/92ab9d4a-97d7-4d30-9a5b-ff3cff91bc48)
+Users can request updates → agencies approve/reject → system syncs changes.
 
+---
 
-## Client-Side
+## ✨ Features
 
-The client-side of the project is built using SvelteKit and features a landing page that serves as the main interface for users to interact with the system.
+### 🏠 Requester (Citizen)
 
-## Server-Side (addressSync)
+* Register/Login via Aadhaar
+* View agencies
+* Submit address update requests
+* Track request status
+* Cancel pending requests
 
-The server-side, contained within the `addressSync` folder, is the main project that will be used by running basic Docker commands. Users can build the container, set the necessary variables, and run the project using Docker Compose.
+### 🏢 Agency
 
-## Key Features
+* Register/Login
+* View pending requests
+* Approve/Reject requests
+* Access request history
 
-1. **User Registration**: Agencies can seamlessly register for the service by providing essential details such as agency name, email, password, and confirmation.
+### 📊 Admin
 
-2. **Update Requests**: Users have the ability to submit requests to update their address information. These requests are then sent to selected agencies for approval or rejection.
+* Status tracking (Pending / Approved / Rejected / Cancelled)
+* Filtering
+* Stats dashboard
+* Audit logs
 
-3. **Agency Responses**: Agencies can conveniently view and respond to update requests, either approving or rejecting them along with a valid reason for rejection.
+---
 
-4. **Data Retrieval**: The system offers functionality for both users and agencies to retrieve information on registered agencies and update requests.
+## 🏗️ Tech Stack
 
-5. **SMS Notifications** (Upcoming): Stay informed with SMS notifications that keep users and agencies in the loop regarding the status of their update requests.
+### Backend
 
-6. **Secure Authentication** (Upcoming): Our system prioritizes security by implementing OAuth2 and JWT for robust authentication and authorization.
+* FastAPI
+* SQLAlchemy
+* SQLite / PostgreSQL
+* JWT Auth
+* Python 3.10+
 
-7. **Internal Request Status Representation**: Utilizes an internal representation of request status, with `active` indicating a pending status, `reject` for rejection, and `accept` for approval.
+### Frontend
 
-8. **FastAPI and Twilio Integration**: Leveraging the power of FastAPI for seamless API development and Twilio for efficient messaging services.
+* HTML, CSS, Vanilla JS
 
-Feel free to explore the functionalities and experience the efficiency of our Aadhaar Information Syncing System.
+### DevOps
 
-## Table of Contents
-- [Aadhaar Information Syncing System](#aadhaar-information-syncing-system)
-  - [Client-Side](#client-side)
-  - [Server-Side (addressSync)](#server-side-addresssync)
-  - [Key Features](#key-features)
-  - [Table of Contents](#table-of-contents)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Endpoints](#endpoints)
-  - [Data Models](#data-models)
-  - [Configuration](#configuration)
-  - [Contributing](#contributing)
-  - [License](#license)
+* Docker
+* Docker Compose
+* Git
 
-## Installation
+---
 
-### Client-Side
+## ⚙️ System Flow
 
-1. Navigate to the client-side directory:
+```
+Citizen → Request → Agency
+   ↓           ↑
+Status ← Approval
+   ↓
+Address Updated
+```
 
-   ```bash
-   cd path/to/client-side
-   ```
+---
 
-2. Install dependencies:
+## 📦 Prerequisites
 
-   ```bash
-   npm install
-   ```
+* Python 3.10+
+* Docker & Docker Compose
+* Git
+* curl
 
-3. Start the development server:
+---
 
-   ```bash
-   npm run dev
-   ```
+## 🚀 Installation
 
-### Server-Side (addressSync)
+### 1. Clone
 
-1. Navigate to the `addressSync` directory:
+```bash
+git clone https://github.com/yourusername/address-sync-system.git
+cd address-sync-system
+```
 
-   ```bash
-   cd path/to/addressSync
-   ```
+---
 
-2. Build the Docker image:
+### 2. Backend Setup
 
-   ```bash
-   docker compose up --build
-   ```
+#### Option A: Docker
 
-3. Set environment variables:
+```bash
+cd backend
+docker-compose up -d --build
+docker-compose logs -f
+docker-compose down
+```
 
-   ```bash
-   export DATABASE_URL=your_database_url
-   export SECRET_KEY=your_secret_key
-   export TWILIO_ACCOUNT_SID=your_twilio_account_sid
-   export TWILIO_AUTH_TOKEN=your_twilio_auth_token
-   export TWILIO_PHONE_NUMBER=your_twilio_phone_number
-   ```
+---
 
-4. Run the Docker container using Docker Compose:
+#### Option B: Local
 
-   ```bash
-   docker-compose up
-   ```
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate   # Linux/Mac
+venv\Scripts\activate      # Windows
 
-## Usage
+pip install -r requirements.txt
 
-(Provide instructions for using both the client-side and server-side of the project, including how to run the landing page and the addressSync system using Docker Compose.)
+mkdir data static
+```
 
-## Endpoints
+Create `.env`:
 
-Describe the available API endpoints and their functionalities.
+```env
+DATABASE_URL=sqlite:///./data/address_sync.db
+SECRET_KEY=your-secret-key
+DEBUG=True
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
+```
 
-- `GET /`: Brief description.
-- `POST /users/`: Create a new user.
-- `POST /agencies/`: Create a new agency.
-- ...
+Run:
 
-## Data Models
+```bash
+uvicorn main:app --reload
+```
 
-Explain the data models used in your application.
+---
 
-- `User`: Description of the User model.
-- `Agency`: Description of the Agency model.
-- `ActiveRequest`: Description of the ActiveRequest model.
+## 🌐 Access
 
-## Configuration
+| Service | URL                         |
+| ------- | --------------------------- |
+| App     | http://localhost:8000       |
+| Docs    | http://localhost:8000/docs  |
+| ReDoc   | http://localhost:8000/redoc |
 
-Explain any configuration settings or environment variables that need to be set.
+---
 
-- `DATABASE_URL`: Database connection URL.
-- ...
+## 💻 Usage
 
+### Demo Users
 
-## Contributing
+| Aadhaar      | Name         | Password    |
+| ------------ | ------------ | ----------- |
+| 123456789012 | Rajesh Kumar | Rajesh@1234 |
 
-Explain how others can contribute to your project. Include guidelines for submitting issues, feature requests, and pull requests.
+### Demo Agencies
 
-## License
+| ID                  | Name         |
+| ------------------- | ------------ |
+| municipal_bangalore | Bangalore MC |
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+---
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+## 🔌 API Example
 
-[![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
+```bash
+# Health
+curl http://localhost:8000/health
 
-[![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg)](http://www.gnu.org/licenses/agpl-3.0)
+# Register
+curl -X POST http://localhost:8000/users/register \
+-H "Content-Type: application/json" \
+-d '{"aadhaar_number":"123456789012","password":"Test@123"}'
+```
 
-I have updated the installation instructions for the server-side (addressSync) part of the project to include the use of Docker Compose. However, you will still need to provide specific usage instructions for both parts of the project.
+---
+
+## 📡 API Endpoints
+
+### User
+
+* POST `/users/register`
+* POST `/users/login`
+* GET `/users/me`
+
+### Agency
+
+* POST `/agencies/register`
+* POST `/agencies/login`
+
+### Requests
+
+* POST `/requests/create`
+* GET `/requests/my-requests`
+* PUT `/requests/{id}`
+
+---
+
+## 📊 Data Models
+
+### User
+
+```json
+{
+  "aadhaar_number": "string",
+  "name": "string",
+  "email": "string",
+  "current_address": "string"
+}
+```
+
+### Request
+
+```json
+{
+  "id": "uuid",
+  "status": "pending | approved | rejected"
+}
+```
+
+---
+
+## ⚙️ Environment Variables
+
+```env
+DATABASE_URL=sqlite:///./data/address_sync.db
+SECRET_KEY=secret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+```
+
+---
+
+## 🐳 Docker
+
+```yaml
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+python test_full_api.py
+```
+
+---
+
+## 🚢 Deployment
+
+### Railway
+
+```bash
+railway up
+```
+
+### Render
+
+* Build: `pip install -r requirements.txt`
+* Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+---
+
+## 🔧 Troubleshooting
+
+### Port Issue
+
+```bash
+lsof -i :8000
+kill -9 PID
+```
+
+### Docker Issue
+
+```bash
+sudo systemctl start docker
+```
+
+---
+
+## 🤝 Contributing
+
+```bash
+git checkout -b feature/new-feature
+git commit -m "Add feature"
+git push origin feature/new-feature
+```
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## 🙌 Credits
+
+* FastAPI
+* SQLAlchemy
+* Docker
+
+---
+
+## 📞 Contact
+
+* GitHub Issues
+* Docs
+* Community
+
+---
+
+<div align="center">
+Made with ❤️  
+</div>
