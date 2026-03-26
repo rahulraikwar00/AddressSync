@@ -1,0 +1,33 @@
+address_sync_service/
+├── main.py
+├── core/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── database.py
+│   ├── security.py
+│   └── logging.py
+├── models/
+│   ├── __init__.py
+│   ├── agency.py
+│   ├── user.py
+│   └── request.py
+├── schemas/
+│   ├── __init__.py
+│   ├── agency.py
+│   ├── user.py
+│   └── request.py
+├── routers/
+│   ├── __init__.py
+│   ├── agencies.py
+│   ├── users.py
+│   └── requests.py
+├── services/
+│   ├── __init__.py
+│   ├── auth.py
+│   └── request_manager.py
+├── middleware/
+│   └── auth.py
+├── static/
+│   └── home.html
+├── requirements.txt
+└── .env
