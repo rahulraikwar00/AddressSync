@@ -1,0 +1,36 @@
+# docker-compose.yml
+version: "3.8"
+
+# docker-compose.yml
+services:
+  backend:
+    build: ./backend
+    container_name: address-sync-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/data:/app/data
+      - /app/__pycache__ # Prevent caching issues
+    environment:
+      - DATABASE_URL=sqlite:///./data/address_sync.db
+      - SECRET_KEY=your-secret-key-change-in-production-12345
+      - DEBUG=True
+    # Override the CMD to enable reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+  # Optional: Add frontend service if you want to serve it
+  # frontend:
+  #   build: ./frontend
+  #   container_name: address-sync-frontend
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - address-sync-network
+
+networks:
+  address-sync-network:
+    driver: bridge

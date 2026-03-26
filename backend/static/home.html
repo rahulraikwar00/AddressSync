@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Address Sync System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        background: white;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .tab {
+        flex: 1;
+        padding: 15px;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: #666;
+      }
+
+      .tab:hover {
+        background: #f0f0f0;
+      }
+
+      .tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Cards */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .card h2 {
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+      }
+
+      .card h3 {
+        color: #555;
+        margin: 15px 0 10px 0;
+        font-size: 1rem;
+      }
+
+      /* Forms */
+      .input-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #555;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      /* Buttons */
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-right: 10px;
+        margin-top: 5px;
+        transition: opacity 0.2s;
+      }
+
+      button:hover {
+        opacity: 0.9;
+      }
+
+      button.danger {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      }
+
+      button.success {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      }
+
+      button.secondary {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      }
+
+      /* Status Badges */
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .status-pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-approved {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .status-cancelled {
+        background: #e2e3e5;
+        color: #383d41;
+      }
+
+      /* Response Box */
+      .response {
+        margin-top: 15px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 12px;
+        max-height: 300px;
+        overflow: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+
+      .response.success {
+        border-left: 4px solid #28a745;
+      }
+
+      .response.error {
+        border-left: 4px solid #dc3545;
+      }
+
+      .token-info {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 10px;
+        font-size: 0.85rem;
+        word-break: break-all;
+      }
+
+      /* Request List */
+      .request-item {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+      }
+
+      .request-item:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .request-id {
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      .request-details {
+        margin-top: 8px;
+        padding-left: 10px;
+        border-left: 2px solid #dee2e6;
+      }
+
+      /* Agency List */
+      .agency-item {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .agency-item:hover {
+        background: #e3f2fd;
+        border-color: #667eea;
+      }
+
+      .agency-item.selected {
+        background: #e3f2fd;
+        border-color: #667eea;
+        border-width: 2px;
+      }
+
+      .agency-name {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .agency-id {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 4px;
+      }
+
+      /* Toast Notifications */
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .toast.success {
+        background: #28a745;
+      }
+      .toast.error {
+        background: #dc3545;
+      }
+      .toast.info {
+        background: #17a2b8;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      .demo-badge {
+        background: #f0f0f0;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        color: #666;
+        margin-left: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏠 Address Sync System</h1>
+        <h2>DEMO ACCOUNT</h2>
+        <p>Manage address change requests between citizens and agencies</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('requester')">
+          👤 Requester Portal
+        </button>
+        <button class="tab" onclick="switchTab('organization')">
+          🏢 Organization Portal
+        </button>
+        <button class="tab" onclick="switchTab('requests')">
+          📋 All Requests
+        </button>
+      </div>
+
+      <!-- Requester Portal (Users) -->
+      <div id="requester-tab" class="tab-content active">
+        <div class="grid">
+          <div class="card">
+            <h2>
+              🔐 Quick Login <span class="demo-badge">Demo Credentials</span>
+            </h2>
+            <div class="input-group">
+              <label>Aadhaar Number</label>
+              <input
+                type="text"
+                id="req-aadhaar"
+                value="123456789012"
+                placeholder="12-digit Aadhaar number"
+              />
+            </div>
+            <div class="input-group">
+              <label>Password</label>
+              <input
+                type="password"
+                id="req-password"
+                value="Rajesh@1234"
+                placeholder="Password"
+              />
+            </div>
+            <button onclick="loginUser()" class="success">Login</button>
+            <div id="req-token-info" class="token-info" style="display: none">
+              <strong>✅ Logged in as:</strong> <span id="req-user-name"></span
+              ><br />
+              <strong>Token:</strong>
+              <span id="req-token-display" style="font-size: 11px"></span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>🏢 Available Agencies</h2>
+            <div id="agencies-list"></div>
+            <div class="input-group" style="margin-top: 15px">
+              <label>Or Enter Agency ID Manually</label>
+              <input
+                type="text"
+                id="manual-agency-id"
+                placeholder="e.g., municipal_bangalore"
+              />
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>📝 Create Request</h2>
+            <div class="input-group">
+              <label>Selected Agency</label>
+              <input
+                type="text"
+                id="selected-agency"
+                readonly
+                placeholder="Select an agency from the list"
+              />
+            </div>
+            <div class="input-group">
+              <label>New Address</label>
+              <textarea
+                id="req-new-address"
+                rows="3"
+                placeholder="Your new address"
+              >
+789 Electronic City, Bangalore, Karnataka 560100</textarea
+              >
+            </div>
+            <button onclick="createRequest()">Submit Request</button>
+            <div id="req-create-response" class="response"></div>
+          </div>
+
+          <div class="card">
+            <h2>📋 My Requests</h2>
+            <button onclick="loadMyRequests()">Refresh</button>
+            <div id="my-requests-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organization Portal (Agencies) -->
+      <div id="organization-tab" class="tab-content">
+        <div class="grid">
+          <div class="card">
+            <h2>
+              🔐 Quick Login <span class="demo-badge">Demo Credentials</span>
+            </h2>
+            <div class="input-group">
+              <label>Agency ID</label>
+              <input
+                type="text"
+                id="org-id"
+                value="municipal_bangalore"
+                placeholder="Agency ID"
+              />
+            </div>
+            <div class="input-group">
+              <label>Password</label>
+              <input
+                type="password"
+                id="org-password"
+                value="BMC@12345"
+                placeholder="Password"
+              />
+            </div>
+            <button onclick="loginAgency()" class="success">Login</button>
+            <div id="org-token-info" class="token-info" style="display: none">
+              <strong>✅ Logged in as:</strong>
+              <span id="org-name-display"></span><br />
+              <strong>Token:</strong>
+              <span id="org-token-display" style="font-size: 11px"></span>
+            </div>
+            <div style="margin-top: 10px">
+              <button
+                onclick="switchAgency('municipal_bangalore')"
+                class="secondary"
+              >
+                Bangalore
+              </button>
+              <button
+                onclick="switchAgency('municipal_mumbai')"
+                class="secondary"
+              >
+                Mumbai
+              </button>
+              <button
+                onclick="switchAgency('municipal_delhi')"
+                class="secondary"
+              >
+                Delhi
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>📋 Pending Requests</h2>
+            <button onclick="loadPendingRequests()">Refresh</button>
+            <div id="pending-requests-list"></div>
+          </div>
+
+          <div class="card">
+            <h2>✅ All Agency Requests</h2>
+            <button onclick="loadAgencyRequests()">Refresh</button>
+            <div id="agency-requests-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Requests Tab -->
+      <div id="requests-tab" class="tab-content">
+        <div class="grid">
+          <div class="card">
+            <h2>📊 All Requests Overview</h2>
+            <div class="input-group">
+              <label>Filter by Status</label>
+              <select id="global-status-filter" onchange="loadAllRequests()">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div id="all-requests-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let userToken = localStorage.getItem("userToken") || "";
+      let agencyToken = localStorage.getItem("agencyToken") || "";
+      let currentUser = null;
+      const API_BASE = "http://localhost:8000";
+
+      // Demo data from test script
+      const DEMO_AGENCIES = [
+        {
+          id: "municipal_bangalore",
+          name: "Bangalore Municipal Corporation",
+          email: "bmc@bangalore.gov.in",
+          password: "BMC@12345",
+        },
+        {
+          id: "municipal_mumbai",
+          name: "Mumbai Municipal Corporation",
+          email: "mmc@mumbai.gov.in",
+          password: "MMC@12345",
+        },
+        {
+          id: "municipal_delhi",
+          name: "Delhi Municipal Corporation",
+          email: "dmc@delhi.gov.in",
+          password: "DMC@12345",
+        },
+      ];
+
+      const DEMO_USERS = [
+        {
+          aadhaar: "123456789012",
+          name: "Rajesh Kumar",
+          password: "Rajesh@1234",
+        },
+        {
+          aadhaar: "234567890123",
+          name: "Priya Sharma",
+          password: "Priya@1234",
+        },
+        { aadhaar: "345678901234", name: "Amit Patel", password: "Amit@1234" },
+        { aadhaar: "456789012345", name: "Neha Gupta", password: "Neha@1234" },
+      ];
+
+      // Show toast notification
+      function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      // API call with better error handling
+      async function apiCall(method, endpoint, data = null, token = null) {
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const options = { method, headers };
+        if (data) options.body = JSON.stringify(data);
+
+        try {
+          const response = await fetch(`${API_BASE}${endpoint}`, options);
+          let result;
+          try {
+            result = await response.json();
+          } catch (e) {
+            result = { error: "Server returned invalid response" };
+          }
+          return { status: response.status, data: result };
+        } catch (error) {
+          showToast("Network error: " + error.message, "error");
+          return { status: 500, data: { error: error.message } };
+        }
+      }
+
+      function renderAgenciesList() {
+        const container = document.getElementById("agencies-list");
+        if (!container) return;
+
+        container.innerHTML = DEMO_AGENCIES.map(
+          (agency) => `
+                <div class="agency-item" onclick="selectAgency('${agency.id}', '${agency.name}')">
+                    <div class="agency-name">🏢 ${agency.name}</div>
+                    <div class="agency-id">ID: ${agency.id}</div>
+                </div>
+            `,
+        ).join("");
+      }
+
+      function selectAgency(agencyId, agencyName) {
+        document.getElementById("selected-agency").value =
+          `${agencyName} (${agencyId})`;
+        document.getElementById("selected-agency").dataset.agencyId = agencyId;
+        showToast(`Selected: ${agencyName}`, "info");
+      }
+
+      function switchAgency(agencyId) {
+        const agency = DEMO_AGENCIES.find((a) => a.id === agencyId);
+        if (agency) {
+          document.getElementById("org-id").value = agency.id;
+          document.getElementById("org-password").value = agency.password;
+          showToast(`Switched to ${agency.name}`, "info");
+        }
+      }
+
+      function renderRequestList(
+        requests,
+        containerId,
+        showActions = false,
+        onApprove = null,
+        onReject = null,
+      ) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (!requests || requests.length === 0) {
+          container.innerHTML =
+            '<p style="color: #666; text-align: center;">No requests found</p>';
+          return;
+        }
+
+        container.innerHTML = requests
+          .map(
+            (req) => `
+                <div class="request-item">
+                    <div class="request-header">
+                        <span class="request-id">🔖 ID: ${req.id}</span>
+                        <span class="status-badge status-${req.status}">${req.status.toUpperCase()}</span>
+                    </div>
+                    <div class="request-details">
+                        ${req.user_name ? `<div>👤 User: ${req.user_name} (${req.user_aadhaar})</div>` : ""}
+                        ${req.user_aadhaar && !req.user_name ? `<div>👤 User: ${req.user_aadhaar}</div>` : ""}
+                        ${req.agency_id ? `<div>🏢 Agency: ${req.agency_id}</div>` : ""}
+                        <div>📍 New Address: ${req.new_address}</div>
+                        ${req.reason ? `<div>📝 Reason: ${req.reason}</div>` : ""}
+                        <div>📅 Created: ${new Date(req.created_at).toLocaleString()}</div>
+                    </div>
+                    ${
+                      showActions && req.status === "pending"
+                        ? `
+                        <div style="margin-top: 10px;">
+                            <button class="success" onclick="updateRequestStatus('${req.id}', 'approved', '')" style="margin-right: 5px;">✓ Approve</button>
+                            <button class="danger" onclick="rejectRequest('${req.id}')">✗ Reject</button>
+                        </div>
+                    `
+                        : ""
+                    }
+                </div>
+            `,
+          )
+          .join("");
+      }
+
+      // ============ USER FUNCTIONS ============
+      async function loginUser() {
+        const data = {
+          aadhaar_number: document.getElementById("req-aadhaar").value,
+          password: document.getElementById("req-password").value,
+        };
+        const response = await apiCall("POST", "/users/login", data);
+
+        if (response.status === 200 && response.data.access_token) {
+          userToken = response.data.access_token;
+          localStorage.setItem("userToken", userToken);
+          document.getElementById("req-token-info").style.display = "block";
+          document.getElementById("req-token-display").textContent = userToken;
+          document.getElementById("req-user-name").textContent =
+            response.data.user?.name || "User";
+          showToast("Login successful!", "success");
+          loadMyRequests();
+        } else {
+          showToast(
+            "Login failed: " + (response.data?.detail || "Invalid credentials"),
+            "error",
+          );
+        }
+      }
+
+      async function createRequest() {
+        if (!userToken) {
+          showToast("Please login first", "error");
+          return;
+        }
+
+        const agencyInput = document.getElementById("selected-agency");
+        let agencyId = agencyInput.dataset.agencyId;
+
+        if (!agencyId) {
+          agencyId = document.getElementById("manual-agency-id").value;
+          if (!agencyId) {
+            showToast("Please select an agency", "error");
+            return;
+          }
+        }
+
+        const newAddress = document.getElementById("req-new-address").value;
+        if (!newAddress) {
+          showToast("Please enter new address", "error");
+          return;
+        }
+
+        const data = { agency_id: agencyId, new_address: newAddress };
+        const response = await apiCall(
+          "POST",
+          "/requests/create",
+          data,
+          userToken,
+        );
+
+        if (response.status === 200) {
+          showToast("Request created successfully!", "success");
+          loadMyRequests();
+        } else {
+          showToast(
+            "Failed to create request: " +
+              (response.data?.detail || "Unknown error"),
+            "error",
+          );
+        }
+      }
+
+      async function loadMyRequests() {
+        if (!userToken) return;
+        const response = await apiCall(
+          "GET",
+          "/requests/my-requests",
+          null,
+          userToken,
+        );
+        if (response.status === 200 && response.data) {
+          renderRequestList(response.data, "my-requests-list");
+        }
+      }
+
+      // ============ AGENCY FUNCTIONS ============
+      async function loginAgency() {
+        const data = {
+          id: document.getElementById("org-id").value,
+          password: document.getElementById("org-password").value,
+        };
+        const response = await apiCall("POST", "/agencies/login", data);
+
+        if (response.status === 200 && response.data.access_token) {
+          agencyToken = response.data.access_token;
+          localStorage.setItem("agencyToken", agencyToken);
+          document.getElementById("org-token-info").style.display = "block";
+          document.getElementById("org-token-display").textContent =
+            agencyToken;
+          document.getElementById("org-name-display").textContent =
+            response.data.agency?.name || "Agency";
+          showToast("Login successful!", "success");
+          loadPendingRequests();
+          loadAgencyRequests();
+        } else {
+          showToast(
+            "Login failed: " + (response.data?.detail || "Invalid credentials"),
+            "error",
+          );
+        }
+      }
+
+      async function updateRequestStatus(requestId, status, reason) {
+        if (!agencyToken) {
+          showToast("Please login as agency first", "error");
+          return;
+        }
+
+        const data = { status };
+        if (reason) data.reason = reason;
+
+        const response = await apiCall(
+          "PUT",
+          `/requests/${requestId}`,
+          data,
+          agencyToken,
+        );
+
+        if (response.status === 200) {
+          showToast(`Request ${status}!`, "success");
+          loadPendingRequests();
+          loadAgencyRequests();
+          loadAllRequests();
+        } else {
+          showToast(`Failed to ${status} request`, "error");
+        }
+      }
+
+      function rejectRequest(requestId) {
+        const reason = prompt(
+          "Enter reason for rejection:",
+          "Invalid address format",
+        );
+        if (reason && reason.trim()) {
+          updateRequestStatus(requestId, "rejected", reason);
+        } else if (reason === "") {
+          showToast("Please provide a reason for rejection", "warning");
+        }
+      }
+
+      async function loadPendingRequests() {
+        if (!agencyToken) return;
+        const response = await apiCall(
+          "GET",
+          "/requests/pending-requests",
+          null,
+          agencyToken,
+        );
+        if (response.status === 200 && response.data) {
+          renderRequestList(response.data, "pending-requests-list", true);
+        }
+      }
+
+      async function loadAgencyRequests() {
+        if (!agencyToken) return;
+        const response = await apiCall(
+          "GET",
+          "/requests/agency-requests",
+          null,
+          agencyToken,
+        );
+        if (response.status === 200 && response.data) {
+          renderRequestList(response.data, "agency-requests-list");
+        }
+      }
+
+      // ============ GLOBAL REQUESTS ============
+      async function loadAllRequests() {
+        const status = document.getElementById("global-status-filter").value;
+
+        if (agencyToken) {
+          const endpoint = status
+            ? `/requests/agency-requests?status=${status}`
+            : "/requests/agency-requests";
+          const response = await apiCall("GET", endpoint, null, agencyToken);
+          if (response.status === 200 && response.data) {
+            renderRequestList(response.data, "all-requests-list");
+          }
+        } else if (userToken) {
+          const response = await apiCall(
+            "GET",
+            "/requests/my-requests",
+            null,
+            userToken,
+          );
+          if (response.status === 200 && response.data) {
+            renderRequestList(response.data, "all-requests-list");
+          }
+        } else {
+          document.getElementById("all-requests-list").innerHTML =
+            '<p style="color: #666; text-align: center;">Please login as user or agency to view requests</p>';
+        }
+      }
+
+      function switchTab(tab) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => c.classList.remove("active"));
+
+        if (tab === "requester") {
+          document.querySelectorAll(".tab")[0].classList.add("active");
+          document.getElementById("requester-tab").classList.add("active");
+          renderAgenciesList();
+          if (userToken) loadMyRequests();
+        } else if (tab === "organization") {
+          document.querySelectorAll(".tab")[1].classList.add("active");
+          document.getElementById("organization-tab").classList.add("active");
+          if (agencyToken) {
+            loadPendingRequests();
+            loadAgencyRequests();
+          }
+        } else {
+          document.querySelectorAll(".tab")[2].classList.add("active");
+          document.getElementById("requests-tab").classList.add("active");
+          loadAllRequests();
+        }
+      }
+
+      // Initialize
+      renderAgenciesList();
+
+      if (userToken) {
+        document.getElementById("req-token-info").style.display = "block";
+        document.getElementById("req-token-display").textContent = userToken;
+        loadMyRequests();
+      }
+      if (agencyToken) {
+        document.getElementById("org-token-info").style.display = "block";
+        document.getElementById("org-token-display").textContent = agencyToken;
+      }
+    </script>
+  </body>
+</html>
