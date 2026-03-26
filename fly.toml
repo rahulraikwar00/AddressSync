@@ -1,0 +1,27 @@
+# fly.toml
+app = "address-sync-system"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DEBUG = "False"
+  APP_NAME = "Address Sync Service"
+  ALLOWED_ORIGINS = "https://address-sync-system.fly.dev"
+  ENABLE_SMS_NOTIFICATIONS = "False"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_start_machines = true
+  auto_stop_machines = true
+  min_machines_running = 0
+
+[mounts]
+  source = "sqlite_data"
+  destination = "/data"
+
+[metrics]
+  port = 8000
+  path = "/health"
