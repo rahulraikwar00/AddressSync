@@ -1,326 +1,112 @@
-# Address Sync System
+# AddressSync
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104.0-009688.svg)](https://fastapi.tiangolo.com)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://docker.com)
-[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)](https://sqlalchemy.org)
+Update your address once. Every agency you consented to gets it automatically.
 
-![Address Sync System](https://i.imgur.com/PQPfHuh.jpg)
+Most systems make you submit an address-change form to each bank, utility, and
+office separately, then wait for each one to "approve" it. That's backwards.
+Your address is *yours* — you should change it in one place, and agencies you
+trust should subscribe to it.
 
----
+This is a working prototype of that flip: **citizen-owned address + consent +
+push-based sync**, built like India Stack's account aggregator / DigiLocker
+consent model.
 
-## 📋 Overview
-
-The **Address Sync System** is a microservice that simplifies updating address information across multiple agencies using Aadhaar as a unique identifier.
-
-Users can request updates → agencies approve/reject → system syncs changes.
-
----
-
-## ✨ Features
-
-### 🏠 Requester (Citizen)
-
-* Register/Login via Aadhaar
-* View agencies
-* Submit address update requests
-* Track request status
-* Cancel pending requests
-
-### 🏢 Agency
-
-* Register/Login
-* View pending requests
-* Approve/Reject requests
-* Access request history
-
-### 📊 Admin
-
-* Status tracking (Pending / Approved / Rejected / Cancelled)
-* Filtering
-* Stats dashboard
-* Audit logs
-
----
-
-## 🏗️ Tech Stack
-
-### Backend
-
-* FastAPI
-* SQLAlchemy
-* SQLite / PostgreSQL
-* JWT Auth
-* Python 3.10+
-
-### Frontend
-
-* HTML, CSS, Vanilla JS
-
-### DevOps
-
-* Docker
-* Docker Compose
-* Git
-
----
-
-## ⚙️ System Flow
+## How it works
 
 ```
-Citizen → Request → Agency
-   ↓           ↑
-Status ← Approval
-   ↓
-Address Updated
+                 ┌─────────────────────────────────────────────┐
+                 │                  AddressSync                │
+                 │                                             │
+ citizen ───────►│  OTP login ──► one versioned address        │
+ (Aadhaar)       │                    │                        │
+                 │              update v1 ──► v2                │
+ agency ◄────────│  pull API (needs active consent)             │
+                 │                    ▲                        │
+ agency ◄────────│  signed webhook ◄──┤                        │
+                 │              outbox worker                  │
+                 └─────────────────────────────────────────────┘
 ```
 
----
+- The citizen has **one canonical address**; every change is a new version,
+  old rows are never mutated (free audit trail).
+- Consent is a first-class row per (citizen, agency): `granted` or `revoked`.
+- Every state change writes an **event to an outbox table** in the same DB
+  transaction. A background worker delivers those events as webhooks to each
+  consented agency, **HMAC-SHA256 signed** so the agency can verify the sender.
+- Agencies can also just **pull** the current address via
+  `GET /agency/addresses/{consent_id}` — the API returns `403` the moment
+  consent is revoked.
+- Aadhaar is never stored raw: only a masked ref (`XXXX XXXX 1234`) and a hash
+  for login lookup.
 
-## 📦 Prerequisites
-
-* Python 3.10+
-* Docker & Docker Compose
-* Git
-* curl
-
----
-
-## 🚀 Installation
-
-### 1. Clone
-
-```bash
-git clone https://github.com/yourusername/address-sync-system.git
-cd address-sync-system
-```
-
----
-
-### 2. Backend Setup
-
-#### Option A: Docker
+## Run it
 
 ```bash
 cd backend
-docker-compose up -d --build
-docker-compose logs -f
-docker-compose down
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python seed.py
+.venv/bin/uvicorn app.main:app --port 8000
 ```
 
----
+Open **http://localhost:8000/demo** — a single page with the citizen panel on
+the left, an agency panel in the middle, and the live sync feed on the right.
+Demo credentials are prefilled automatically (Aadhaar `111122223333`; in dev
+mode the OTP is shown on screen instead of being sent by SMS).
 
-#### Option B: Local
+Docker instead: `./start.sh` from the repo root.
+
+## Prove it without a browser
 
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate   # Linux/Mac
-venv\Scripts\activate      # Windows
-
-pip install -r requirements.txt
-
-mkdir data static
+./scripts/demo.sh          # replays the whole story with curl, step by step
+cd backend && python smoke_test.py   # asserts every step end-to-end
 ```
 
-Create `.env`:
+The story it tells, in order:
 
-```env
-DATABASE_URL=sqlite:///./data/address_sync.db
-SECRET_KEY=your-secret-key
-DEBUG=True
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
-```
+1. Citizen logs in via OTP, updates their address (v2)
+2. A new agency registers and points its webhook at the built-in fake inbox
+3. Citizen grants consent → current address is pushed immediately
+4. Citizen updates again → agency receives the change with no action needed
+5. Citizen revokes → agency is notified, and its next pull returns 403
 
-Run:
+## API
 
-```bash
-uvicorn main:app --reload
-```
+| Method | Path | Who | What |
+|---|---|---|---|
+| POST | `/citizen/otp/request` | public | request login OTP |
+| POST | `/citizen/otp/verify` | public | verify OTP → JWT |
+| GET | `/citizen/me` | citizen | profile, current address, consents |
+| PUT | `/citizen/address` | citizen | new address version (+ notify) |
+| POST/DELETE | `/citizen/consents[...]` | citizen | grant / revoke agency access |
+| POST | `/agencies/register` | public | create agency (API key shown once) |
+| POST | `/agencies/login` | public | API key → JWT |
+| PUT | `/agency/webhook` | agency | set push endpoint |
+| GET | `/agency/addresses/{consent_id}` | agency | pull current address |
 
----
+Interactive docs: `/docs`.
 
-## 🌐 Access
+Webhooks agencies receive: `address.updated`, `consent.revoked` — JSON body
+with `X-Signature: HMAC-SHA256(webhook_secret, body)` and `X-Event-Id`
+headers. Failed deliveries retry 3 times with backoff, then mark as failed.
 
-| Service | URL                         |
-| ------- | --------------------------- |
-| App     | http://localhost:8000       |
-| Docs    | http://localhost:8000/docs  |
-| ReDoc   | http://localhost:8000/redoc |
+## Stack
 
----
+FastAPI · SQLAlchemy · SQLite · PyJWT · httpx. One process: API + worker.
 
-## 💻 Usage
+## What's simulated vs real
 
-### Demo Users
+Simulated: the UIDAI layer (OTP is returned by the API in dev mode instead of
+arriving via SMS) and the agencies themselves (the demo page hosts a fake
+receiver so pushes have somewhere to land).
 
-| Aadhaar      | Name         | Password    |
-| ------------ | ------------ | ----------- |
-| 123456789012 | Rajesh Kumar | Rajesh@1234 |
+Real: consent lifecycle, address versioning, transactional outbox, HMAC-signed
+delivery with retries, revocation propagation, JWT auth for both sides.
 
-### Demo Agencies
+What production would add: actual UIDAI eKYC integration, Postgres, a real
+job queue (Celery/SQS) instead of the in-process asyncio loop, Alembic
+migrations, encrypted webhook secrets, rate limiting, and an audit-log UI.
 
-| ID                  | Name         |
-| ------------------- | ------------ |
-| municipal_bangalore | Bangalore MC |
+## License
 
----
-
-## 🔌 API Example
-
-```bash
-# Health
-curl http://localhost:8000/health
-
-# Register
-curl -X POST http://localhost:8000/users/register \
--H "Content-Type: application/json" \
--d '{"aadhaar_number":"123456789012","password":"Test@123"}'
-```
-
----
-
-## 📡 API Endpoints
-
-### User
-
-* POST `/users/register`
-* POST `/users/login`
-* GET `/users/me`
-
-### Agency
-
-* POST `/agencies/register`
-* POST `/agencies/login`
-
-### Requests
-
-* POST `/requests/create`
-* GET `/requests/my-requests`
-* PUT `/requests/{id}`
-
----
-
-## 📊 Data Models
-
-### User
-
-```json
-{
-  "aadhaar_number": "string",
-  "name": "string",
-  "email": "string",
-  "current_address": "string"
-}
-```
-
-### Request
-
-```json
-{
-  "id": "uuid",
-  "status": "pending | approved | rejected"
-}
-```
-
----
-
-## ⚙️ Environment Variables
-
-```env
-DATABASE_URL=sqlite:///./data/address_sync.db
-SECRET_KEY=secret
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-```
-
----
-
-## 🐳 Docker
-
-```yaml
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-```
-
----
-
-## 🧪 Testing
-
-```bash
-python test_full_api.py
-```
-
----
-
-## 🚢 Deployment
-
-### Railway
-
-```bash
-railway up
-```
-
-### Render
-
-* Build: `pip install -r requirements.txt`
-* Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
----
-
-## 🔧 Troubleshooting
-
-### Port Issue
-
-```bash
-lsof -i :8000
-kill -9 PID
-```
-
-### Docker Issue
-
-```bash
-sudo systemctl start docker
-```
-
----
-
-## 🤝 Contributing
-
-```bash
-git checkout -b feature/new-feature
-git commit -m "Add feature"
-git push origin feature/new-feature
-```
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## 🙌 Credits
-
-* FastAPI
-* SQLAlchemy
-* Docker
-
----
-
-## 📞 Contact
-
-* GitHub Issues
-* Docs
-* Community
-
----
-
-<div align="center">
-Made with ❤️  
-</div>
+MIT

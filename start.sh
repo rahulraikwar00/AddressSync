@@ -34,6 +34,7 @@ RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if curl -s http://localhost:8000/health > /dev/null 2>&1; then
         echo "✅ Backend is running at http://localhost:8000"
+        echo "🎬 Demo UI at http://localhost:8000/demo"
         echo "📖 API Docs at http://localhost:8000/docs"
         break
     fi
@@ -51,4 +52,3 @@ echo "📋 Useful commands:"
 echo "  View logs: $COMPOSE_CMD logs -f"
 echo "  Stop: $COMPOSE_CMD down"
 echo "  Restart: $COMPOSE_CMD restart"
-echo "  Clean everything: ./clean.sh"
