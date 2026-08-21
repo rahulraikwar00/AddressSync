@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Replays the whole AddressSync story against a running server.
-# Usage: ./scripts/demo.sh [base_url]
+# Usage: ./demo.sh [base_url]
 set -e
 
 BASE="${1:-http://127.0.0.1:8000}"

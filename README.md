@@ -58,7 +58,7 @@ Docker instead: `./start.sh` from the repo root.
 ## Prove it without a browser
 
 ```bash
-./scripts/demo.sh          # replays the whole story with curl, step by step
+./demo.sh                  # replays the whole story with curl, step by step
 cd backend && python smoke_test.py   # asserts every step end-to-end
 ```
 
@@ -106,6 +106,23 @@ delivery with retries, revocation propagation, JWT auth for both sides.
 What production would add: actual UIDAI eKYC integration, Postgres, a real
 job queue (Celery/SQS) instead of the in-process asyncio loop, Alembic
 migrations, encrypted webhook secrets, rate limiting, and an audit-log UI.
+
+## Deploy your own
+
+Free public URL on Render (no credit card needed):
+
+1. Push this repo to your GitHub account
+2. [dashboard.render.com](https://dashboard.render.com) → **New → Web Service** → connect the repo
+3. Render auto-detects the root `Dockerfile`. Instance type: **Free**
+4. Add environment variables:
+   - `WEBHOOK_BASE_URL` = `https://<your-service>.onrender.com` (so webhook pushes loop back correctly)
+   - `SECRET_KEY` = any long random string
+   - `DEV_MODE` = `true` (OTP shown on screen instead of SMS)
+5. Set **Health Check Path** to `/health`, then deploy → open `https://<service>.onrender.com/demo`
+
+Free-tier notes: sleeps after 15 min idle (~30–60s cold start on next visit);
+the SQLite file resets on redeploy/restart, but `seed.py` reseeds on boot so
+the demo always works — history just isn't permanent.
 
 ## License
 

@@ -1,0 +1,14 @@
+.git
+.github
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/data/
+*.db
+*.log
+README.md
+demo.sh
+start.sh
+stop.sh
+docker-compose.yml

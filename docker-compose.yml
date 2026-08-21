@@ -1,6 +1,6 @@
 services:
   backend:
-    build: ./backend
+    build: .
     container_name: address-sync-backend
     ports:
       - "8000:8000"
