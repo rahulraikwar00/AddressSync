@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AddressSync v2 — consent-based sync demo</title>
+<style>
+  :root {
+    --bg: #0b1220; --card: #131c2e; --border: #22304a;
+    --text: #e2e8f0; --muted: #8ea0bd;
+    --accent: #6366f1; --accent-h: #4f46e5;
+    --ok: #10b981; --warn: #f59e0b; --bad: #ef4444;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 20px;
+  }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 22px; }
+  h1 .ver { color: var(--accent); font-size: 13px; vertical-align: super; }
+  .sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 16px; max-width: 1400px; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; min-width: 0;
+  }
+  h2 { margin: 0 0 14px; font-size: 16px; }
+  h3 { margin: 18px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  input, select {
+    width: 100%; padding: 8px 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: #0d1526; color: var(--text);
+    font-size: 13px; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  .btn {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: #1b2740; color: var(--text); cursor: pointer; font-size: 13px;
+    margin-top: 10px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); }
+  .btn.primary:hover { background: var(--accent-h); }
+  .btn.ghost { background: transparent; }
+  .btn.small { padding: 4px 10px; margin: 0; font-size: 12px; }
+  .btn.danger { background: transparent; border-color: var(--bad); color: var(--bad); }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  .row > .btn { flex: 0 0 auto; }
+  .hint {
+    margin-top: 10px; padding: 8px 10px; border-radius: 8px;
+    background: #10251f; border: 1px solid #1d4034; color: #6ee7b7;
+    font-family: var(--mono); font-size: 13px;
+  }
+  .err { color: var(--bad); font-size: 12px; margin-top: 8px; min-height: 15px; white-space: pre-wrap; }
+  .ok { color: var(--ok); font-size: 12px; margin-top: 6px; min-height: 15px; }
+  .profile {
+    padding: 10px 12px; border-radius: 8px; background: #0d1526;
+    border: 1px solid var(--border); font-size: 13px; margin-bottom: 6px;
+  }
+  .profile b { color: #fff; }
+  .badge {
+    display: inline-block; padding: 1px 8px; border-radius: 99px;
+    background: #1b2740; border: 1px solid var(--border);
+    font-size: 11px; color: var(--muted); vertical-align: middle;
+  }
+  .chip { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+  .chip.pending { background: #3a2c10; color: var(--warn); }
+  .chip.delivered { background: #0d2b21; color: var(--ok); }
+  .chip.failed { background: #331419; color: var(--bad); }
+  .chip.granted { background: #0d2b21; color: var(--ok); }
+  .chip.revoked { background: #331419; color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 4px 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 5px 8px; border-bottom: 1px solid #182338; vertical-align: top; }
+  td.mono, .mono { font-family: var(--mono); font-size: 11px; }
+  .muted { color: var(--muted); }
+  pre.result {
+    background: #0d1526; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px; font-size: 11px; overflow-x: auto; max-height: 260px;
+    font-family: var(--mono); white-space: pre-wrap;
+  }
+  .consentItem {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 6px; gap: 8px; font-size: 12px;
+  }
+  .hidden { display: none; }
+  .feedwrap { max-height: 300px; overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>AddressSync <span class="ver">v2 prototype</span></h1>
+    <p class="sub">citizen owns one versioned address &middot; agencies subscribe via consent &middot; changes push as signed webhooks</p>
+  </div>
+  <button class="btn ghost" id="resetBtn">↺ Reset demo data</button>
+</header>
+
+<main>
+  <!-- ============ CITIZEN ============ -->
+  <section class="card">
+    <h2>🏠 Citizen</h2>
+
+    <div id="citizenLogin">
+      <label>Aadhaar number (mock eKYC)</label>
+      <input id="aadhaarInput" maxlength="12" placeholder="12-digit Aadhaar">
+      <button class="btn primary" id="otpBtn">Request OTP</button>
+      <div class="hint hidden" id="otpHint"></div>
+      <div class="hidden" id="otpRow">
+        <label>Enter OTP</label>
+        <div class="row">
+          <input id="otpInput" maxlength="6" placeholder="6-digit OTP">
+          <button class="btn primary" id="verifyBtn">Verify</button>
+        </div>
+      </div>
+      <div class="err" id="citizenErr"></div>
+    </div>
+
+    <div id="citizenPanel" class="hidden">
+      <div class="profile" id="profileBox"></div>
+      <button class="btn small ghost" id="logoutBtn">logout</button>
+
+      <h3>My address <span class="badge" id="addrVersion"></span></h3>
+      <form id="addrForm">
+        <label>Line 1</label><input name="line1">
+        <label>Line 2</label><input name="line2">
+        <label>City</label><input name="city">
+        <label>State</label><input name="state">
+        <label>Pincode</label><input name="pincode" maxlength="6">
+        <button class="btn primary" type="submit">Save new version → notify consented agencies</button>
+      </form>
+      <div class="ok" id="addrMsg"></div>
+
+      <h3>Consents</h3>
+      <div id="consentList"></div>
+      <label>Grant access to</label>
+      <select id="consentAgency"></select>
+      <label>Purpose</label>
+      <input id="consentPurpose" value="address verification">
+      <button class="btn" id="grantBtn">Grant consent</button>
+      <div class="err" id="consentErr"></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY ============ -->
+  <section class="card">
+    <h2>🏢 Agency</h2>
+
+    <div id="agencyLogin">
+      <label>Agency</label>
+      <select id="agencySelect"></select>
+      <label>API key</label>
+      <input id="apiKeyInput" placeholder="agk_...">
+      <button class="btn primary" id="agencyLoginBtn">Login with API key</button>
+      <div class="err" id="agencyErr"></div>
+    </div>
+
+    <div id="agencyPanel" class="hidden">
+      <div class="profile" id="agencyBox"></div>
+      <button class="btn small ghost" id="agencyLogoutBtn">logout</button>
+
+      <h3>Webhook endpoint</h3>
+      <div class="row">
+        <input id="webhookUrl" placeholder="https://... or built-in receiver">
+        <button class="btn" id="webhookSave">Save</button>
+      </div>
+      <div class="ok" id="webhookMsg"></div>
+
+      <h3>Pull current address (consent-gated)</h3>
+      <select id="consentSelect"></select>
+      <button class="btn primary" id="pullBtn">Pull address</button>
+      <pre class="result" id="pullResult">—</pre>
+    </div>
+  </section>
+
+  <!-- ============ FEED ============ -->
+  <section class="card">
+    <h2>📡 Live sync feed</h2>
+
+    <h3>Outbox events (worker delivers these)</h3>
+    <div class="feedwrap">
+      <table>
+        <thead><tr><th>time</th><th>event</th><th>agency</th><th>status</th></tr></thead>
+        <tbody id="eventsBody"><tr><td colspan="4" class="muted">waiting…</td></tr></tbody>
+      </table>
+    </div>
+
+    <h3>Webhook receipts (fake agency inbox)</h3>
+    <div class="feedwrap">
+      <table>
+        <thead><tr><th>time</th><th>agency</th><th>event</th><th>signature</th></tr></thead>
+        <tbody id="receiptsBody"><tr><td colspan="4" class="muted">waiting…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script src="/static/demo.js"></script>
+</body>
+</html>

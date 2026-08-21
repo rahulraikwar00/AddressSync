@@ -28,5 +28,5 @@ RUN mkdir -p /app/data && chmod 755 /app/data
 # Expose port
 EXPOSE 8000
 
-# Use --reload flag for development
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Seed demo data, then serve
+CMD ["sh", "-c", "python seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
