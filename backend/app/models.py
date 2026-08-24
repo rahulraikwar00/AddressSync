@@ -61,7 +61,8 @@ class AddressRecord(Base):
     __tablename__ = "addresses"
 
     id = Column(String, primary_key=True, default=uid)
-    citizen_id = Column(String, ForeignKey("citizens.id"), index=True, nullable=False)
+    citizen_id = Column(String, ForeignKey("citizens.id"),
+                        index=True, nullable=False)
     version = Column(Integer, nullable=False)
     line1 = Column(String, nullable=False)
     line2 = Column(String)
@@ -89,7 +90,8 @@ class Agency(Base):
     id = Column(String, primary_key=True)  # slug, e.g. "bangalore-mc"
     name = Column(String, nullable=False)
     api_key_hash = Column(String, nullable=False, unique=True, index=True)
-    webhook_secret = Column(String, nullable=False)  # prototype: plain; encrypt in prod
+    # prototype: plain; encrypt in prod
+    webhook_secret = Column(String, nullable=False)
     webhook_url = Column(String)
     created_at = Column(DateTime, default=utcnow)
 
@@ -98,15 +100,25 @@ class Agency(Base):
 
 class Consent(Base):
     __tablename__ = "consents"
-    __table_args__ = (UniqueConstraint("citizen_id", "agency_id", name="uq_citizen_agency"),)
-
+    __table_args__ = (UniqueConstraint(
+        "citizen_id", "agency_id", name="uq_citizen_agency"),)
+    # pending|confirmed|rejected
+    status = Column(String, nullable=False, default="pending")
+    remark = Column(String)
     id = Column(String, primary_key=True, default=uid)
-    citizen_id = Column(String, ForeignKey("citizens.id"), index=True, nullable=False)
-    agency_id = Column(String, ForeignKey("agencies.id"), index=True, nullable=False)
+    citizen_id = Column(String, ForeignKey("citizens.id"),
+                        index=True, nullable=False)
+    agency_id = Column(String, ForeignKey("agencies.id"),
+                       index=True, nullable=False)
     purpose = Column(String, nullable=False, default="address verification")
-    status = Column(String, nullable=False, default="granted")  # granted | revoked
-    granted_at = Column(DateTime, default=utcnow)
-    revoked_at = Column(DateTime)
+    created_at = Column(DateTime, default=utcnow)
+    confirmed_at = Column(DateTime)
+    # stamped on the agency's first pull; acting requires a prior review
+    reviewed_at = Column(DateTime)
+    # stamped when the agency acts; citizen cancellations never get one
+    handled_at = Column(DateTime)
+    # reference UUID issued at the moment the agency takes its action
+    handle_id = Column(String, index=True)
 
     citizen = relationship("Citizen", back_populates="consents")
     agency = relationship("Agency", back_populates="consents")
@@ -118,11 +130,13 @@ class Event(Base):
     __tablename__ = "events"
 
     id = Column(String, primary_key=True, default=uid)
-    type = Column(String, nullable=False)  # address.updated | consent.granted | consent.revoked
+    # address.updated (only type enqueued today; confirm/reject/cancel are audit-only)
+    type = Column(String, nullable=False)
     citizen_id = Column(String, index=True)
     agency_id = Column(String, index=True, nullable=False)
     payload = Column(JSON, nullable=False)
-    status = Column(String, nullable=False, default="pending")  # pending | delivered | failed
+    # pending | delivered | failed
+    status = Column(String, nullable=False, default="pending")
     attempts = Column(Integer, default=0)
     next_attempt_at = Column(DateTime, default=utcnow)
     last_error = Column(Text)

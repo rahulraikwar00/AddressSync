@@ -2,11 +2,12 @@
 
 Usage: start the server, then  python smoke_test.py
 """
+import os
 import time
 
 import httpx
 
-BASE = "http://127.0.0.1:8000"
+BASE = os.environ.get("ADDRESSSYNC_BASE", "http://127.0.0.1:8000")
 AADHAAR = "111122223333"
 
 
@@ -67,35 +68,42 @@ def main():
     api_key = r.json()["api_key"]
     print("ok  agency registered (api key shown once)")
 
-    # grant consent -> outbox pushes current address immediately
-    consent_id = c.post(
-        "/citizen/consents", headers=H, json={"agency_id": "test-bank", "purpose": "kyc"}
-    ).json()["consent_id"]
+    # consent REQUEST -> pending until the agency acts
+    r = c.post(
+        "/citizen/consents",
+        headers=H,
+        json={"agency_id": "test-bank", "purpose": "kyc"},
+    )
+    body = r.json()
+    consent_id = body["consent_id"]
+    assert body["status"] == "pending", r.text
+    me = c.get("/citizen/me", headers=H).json()
+    mine = next(x for x in me["consents"] if x["agency_id"] == "test-bank")
+    assert mine["created_at"] and not mine["handled_at"], mine
+    print("ok  consent requested -> pending, created_at recorded")
 
-    def grant_delivered():
-        s = c.get("/demo/state").json()
-        evs = [
-            e for e in s["events"]
-            if e["agency_id"] == "test-bank"
-            and e["type"] == "address.updated"
-            and e["status"] == "delivered"
-        ]
-        return bool(evs) and any(
-            rc["agency_id"] == "test-bank" and rc["signature_valid"]
-            for rc in s["receipts"]
-        )
-
-    wait_for(grant_delivered, desc="consent-grant webhook delivery")
-    print("ok  consent granted -> webhook delivered with valid HMAC signature")
-
-    # agency pulls the current address
+    # agency login; acting on an unreviewed request is refused
     atoken = c.post("/agencies/login", json={"api_key": api_key}).json()["access_token"]
     AH = {"Authorization": f"Bearer {atoken}"}
-    body = c.get(f"/agency/addresses/{consent_id}", headers=AH).json()
-    assert body["address"]["version"] == 2 and body["citizen_name"], body
-    print("ok  agency pulled current address (v2)")
+    r = c.post(f"/agency/consents/{consent_id}/confirm", headers=AH)
+    assert r.status_code == 400, r.text
+    print("ok  agency logged in; confirm refused before review (400)")
 
-    # citizen updates again -> push v3 to consented agency
+    # pull works on a PENDING consent -> that pull counts as the review
+    body = c.get(f"/agency/addresses/{consent_id}", headers=AH).json()
+    assert (
+        body["address"]["version"] == 2 and body["consent_status"] == "pending"
+    ), body
+    print("ok  agency reviewed the pending request via pull")
+
+    # agency takes action: confirm -> a reference handle id is issued
+    r = c.post(f"/agency/consents/{consent_id}/confirm", headers=AH)
+    body = r.json()
+    handle_id = body.get("handle_id")
+    assert body["status"] == "confirmed" and handle_id and len(handle_id) == 36, r.text
+    print(f"ok  agency confirmed consent (handle {handle_id[:8]}...)")
+
+    # citizen updates again -> push v3 to the confirmed agency
     r = c.put(
         "/citizen/address",
         headers=H,
@@ -108,7 +116,7 @@ def main():
     )
     assert r.json()["agencies_notified"] == ["test-bank"], r.text
 
-    def two_delivered():
+    def delivered():
         s = c.get("/demo/state").json()
         return (
             len([
@@ -117,28 +125,46 @@ def main():
                 and e["type"] == "address.updated"
                 and e["status"] == "delivered"
             ])
-            >= 2
+            >= 1
         )
 
-    wait_for(two_delivered, desc="v3 webhook delivery")
+    wait_for(delivered, desc="v3 webhook delivery")
     assert c.get(f"/agency/addresses/{consent_id}", headers=AH).json()["address"]["version"] == 3
     print("ok  change propagated automatically (v3 pushed + pull reflects it)")
 
-    # revoke -> revocation event delivered, pull now forbidden
-    assert c.delete("/citizen/consents/test-bank", headers=H).status_code == 200
+    # once the agency has acted, the citizen can no longer cancel/revoke
+    r = c.delete("/citizen/consents/test-bank", headers=H)
+    assert r.status_code == 409, r.text
+    print("ok  cancel blocked on confirmed consent (409, archived)")
 
-    def revoke_delivered():
-        s = c.get("/demo/state").json()
-        evs = [
-            e for e in s["events"]
-            if e["agency_id"] == "test-bank" and e["type"] == "consent.revoked"
-        ]
-        return bool(evs) and evs[0]["status"] == "delivered"
+    # agency-side record of every handled consent
+    handled = c.get("/agency/consents/handled", headers=AH).json()
+    row = next(h for h in handled if h["consent_id"] == consent_id)
+    assert row["handle_id"] == handle_id and row["citizen_name"], handled
+    assert row["status"] == "confirmed" and row["handled_at"], row
+    print("ok  agency handled-record: citizen name + consent id + handle id")
 
-    wait_for(revoke_delivered, desc="revocation webhook")
-    r = c.get(f"/agency/addresses/{consent_id}", headers=AH)
-    assert r.status_code == 403, r.text
-    print("ok  revocation pushed; pull now returns 403")
+    # a PENDING request can still be cancelled by the citizen
+    c.post(
+        "/citizen/consents",
+        headers=H,
+        json={"agency_id": "passport-office", "purpose": "renewal"},
+    )
+    r = c.delete("/citizen/consents/passport-office", headers=H)
+    assert r.status_code == 200, r.text
+    me = c.get("/citizen/me", headers=H).json()
+    po = next(x for x in me["consents"] if x["agency_id"] == "passport-office")
+    assert po["status"] == "rejected" and po["remark"] == "Cancelled by citizen", po
+    assert po["created_at"] and po["handled_at"] and not po["handle_id"], po
+    print("ok  pending request cancelled before any agency action")
+
+    # after cancellation the agency loses pull access entirely
+    ptok = c.post(
+        "/agencies/login", json={"api_key": "agk_demo_passport_office"}
+    ).json()["access_token"]
+    PH = {"Authorization": f"Bearer {ptok}"}
+    assert c.get(f"/agency/addresses/{po['id']}", headers=PH).status_code == 403
+    print("ok  cancelled consent: agency pull returns 403")
 
     # seeded demo agencies present
     ids = {a["id"] for a in c.get("/demo/state").json()["agencies"]}

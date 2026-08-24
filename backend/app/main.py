@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 
 from .db import Base, engine
 from .events import worker_loop
@@ -16,7 +17,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
 )
 
-STATIC_DIR = Path(__file__).parent / "static"
+STATIC_DIR = Path(__file__).parent/"static"
 
 DESCRIPTION = """
 Consent-based address sync prototype (India Stack style).
@@ -28,9 +29,26 @@ Consent-based address sync prototype (India Stack style).
 """
 
 
+def _ensure_consent_columns() -> None:
+    """Prototype-grade migration: add newly introduced Consent columns to an
+    existing SQLite file (create_all only creates missing tables)."""
+    cols = {c["name"] for c in inspect(engine).get_columns("consents")}
+    stmts = [
+        ("created_at", "ALTER TABLE consents ADD COLUMN created_at DATETIME"),
+        ("reviewed_at", "ALTER TABLE consents ADD COLUMN reviewed_at DATETIME"),
+        ("handled_at", "ALTER TABLE consents ADD COLUMN handled_at DATETIME"),
+        ("handle_id", "ALTER TABLE consents ADD COLUMN handle_id VARCHAR"),
+    ]
+    with engine.begin() as conn:
+        for name, ddl in stmts:
+            if name not in cols:
+                conn.execute(text(ddl))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _ensure_consent_columns()
     worker = asyncio.create_task(worker_loop())
     yield
     worker.cancel()

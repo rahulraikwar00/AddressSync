@@ -21,6 +21,26 @@ DEMO_AGENCIES = [
         "name": "Regional Passport Office",
         "api_key": "agk_demo_passport_office",
     },
+    {
+        "slug": "rto-karnataka",
+        "name": "Regional Transport Office",
+        "api_key": "agk_demo_rto_karnataka",
+    },
+    {
+        "slug": "income-tax-dept",
+        "name": "Income Tax Department",
+        "api_key": "agk_demo_income_tax",
+    },
+    {
+        "slug": "city-power",
+        "name": "City Power Supply Co.",
+        "api_key": "agk_demo_city_power",
+    },
+    {
+        "slug": "state-bank",
+        "name": "State National Bank",
+        "api_key": "agk_demo_state_bank",
+    },
 ]
 
 DEMO_ADDRESS = {
