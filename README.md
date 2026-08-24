@@ -29,13 +29,19 @@ consent model.
 
 - The citizen has **one canonical address**; every change is a new version,
   old rows are never mutated (free audit trail).
-- Consent is a first-class row per (citizen, agency): `granted` or `revoked`.
+- Consent is a first-class row per (citizen, agency): `pending`, `confirmed`
+  or `rejected`. A citizen can send and cancel a request only while it is
+  `pending`; once the agency acts (confirm/reject) the row is archived with
+  its final status and a reference **handle id** issued at action time.
+- Agencies must **review before deciding**: the first pull of a pending
+  request stamps it as reviewed, and confirm/reject are refused (HTTP 400)
+  until that has happened.
 - Every state change writes an **event to an outbox table** in the same DB
   transaction. A background worker delivers those events as webhooks to each
   consented agency, **HMAC-SHA256 signed** so the agency can verify the sender.
 - Agencies can also just **pull** the current address via
-  `GET /agency/addresses/{consent_id}` — the API returns `403` the moment
-  consent is revoked.
+  `GET /agency/addresses/{consent_id}` — allowed while `pending` (review) and
+  after confirmation; rejected or cancelled consents get `403`.
 - Aadhaar is never stored raw: only a masked ref (`XXXX XXXX 1234`) and a hash
   for login lookup.
 
@@ -49,7 +55,8 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 Open **http://localhost:8000/demo** — a single page with the citizen panel on
-the left, an agency panel in the middle, and the live sync feed on the right.
+the left, an agency panel in the middle, and a searchable live activity feed
+(consent flow + webhook deliveries) on the right.
 Demo credentials are prefilled automatically (Aadhaar `111122223333`; in dev
 mode the OTP is shown on screen instead of being sent by SMS).
 
@@ -66,9 +73,11 @@ The story it tells, in order:
 
 1. Citizen logs in via OTP, updates their address (v2)
 2. A new agency registers and points its webhook at the built-in fake inbox
-3. Citizen grants consent → current address is pushed immediately
-4. Citizen updates again → agency receives the change with no action needed
-5. Citizen revokes → agency is notified, and its next pull returns 403
+3. Citizen requests consent → stays pending until the agency acts
+4. Agency pulls the address first — confirm/reject are refused before review
+5. Agency confirms → handle id issued; later updates push automatically
+6. Cancelling is only possible while pending — after the agency acts the
+   request returns 409 and the consent stays archived
 
 ## API
 
@@ -78,15 +87,16 @@ The story it tells, in order:
 | POST | `/citizen/otp/verify` | public | verify OTP → JWT |
 | GET | `/citizen/me` | citizen | profile, current address, consents |
 | PUT | `/citizen/address` | citizen | new address version (+ notify) |
-| POST/DELETE | `/citizen/consents[...]` | citizen | grant / revoke agency access |
+| POST/DELETE | `/citizen/consents[...]` | citizen | send / cancel a pending consent request |
 | POST | `/agencies/register` | public | create agency (API key shown once) |
 | POST | `/agencies/login` | public | API key → JWT |
 | PUT | `/agency/webhook` | agency | set push endpoint |
-| GET | `/agency/addresses/{consent_id}` | agency | pull current address |
+| GET | `/agency/consents/handled` | agency | record of handled consents (citizen, consent id, handle id) |
+| GET | `/agency/addresses/{consent_id}` | agency | pull current address (first pull of a pending request = review) |
 
 Interactive docs: `/docs`.
 
-Webhooks agencies receive: `address.updated`, `consent.revoked` — JSON body
+Webhooks agencies receive: `address.updated` — JSON body
 with `X-Signature: HMAC-SHA256(webhook_secret, body)` and `X-Event-Id`
 headers. Failed deliveries retry 3 times with backoff, then mark as failed.
 

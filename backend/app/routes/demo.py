@@ -61,6 +61,8 @@ def _iso(dt):
 @router.get("/state")
 def demo_state(db: Session = Depends(get_db)):
     """Everything the single-page demo needs; polled by the page for live updates."""
+    citizen_names = {c.id: c.name for c in db.query(Citizen).all()}
+    agency_names = {a.id: a.name for a in db.query(Agency).all()}
     return {
         "citizens": [
             {"id": c.id, "aadhaar_ref": c.aadhaar_ref, "name": c.name}
@@ -74,8 +76,17 @@ def demo_state(db: Session = Depends(get_db)):
             {
                 "id": c.id,
                 "agency_id": c.agency_id,
+                "citizen_id": c.citizen_id,
+                "citizen_ref": c.citizen.aadhaar_ref,
+                "citizen_name": c.citizen.name,
                 "status": c.status,
                 "purpose": c.purpose,
+                "remark": c.remark,
+                "created_at": _iso(c.created_at),
+                "confirmed_at": _iso(c.confirmed_at),
+                "reviewed_at": _iso(c.reviewed_at),
+                "handled_at": _iso(c.handled_at),
+                "handle_id": c.handle_id,
             }
             for c in db.query(Consent).all()
         ],
@@ -104,6 +115,26 @@ def demo_state(db: Session = Depends(get_db)):
             for r in db.query(WebhookReceipt)
             .order_by(WebhookReceipt.received_at.desc())
             .limit(15)
+            .all()
+        ],
+        "audit": [
+            {
+                "id": a.id,
+                "ts": _iso(a.ts),
+                "actor_type": a.actor_type or "system",
+                "actor": (
+                    agency_names.get(a.actor_id)
+                    if a.actor_type == "agency"
+                    else citizen_names.get(a.actor_id)
+                    if a.actor_type == "citizen"
+                    else None
+                ),
+                "action": a.action,
+                "detail": a.detail,
+            }
+            for a in db.query(AuditLog)
+            .order_by(AuditLog.ts.desc())
+            .limit(100)
             .all()
         ],
         "server_time": utcnow().isoformat() + "Z",

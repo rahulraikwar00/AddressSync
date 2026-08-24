@@ -32,6 +32,20 @@ def _current_address(db: Session, citizen_id: str) -> AddressRecord | None:
     )
 
 
+def _consent_dict(c: Consent) -> dict:
+    return {
+        "id": c.id,
+        "agency_id": c.agency_id,
+        "purpose": c.purpose,
+        "status": c.status,
+        "remark": c.remark,
+        "created_at": c.created_at.isoformat() if c.created_at else None,
+        "confirmed_at": c.confirmed_at.isoformat() if c.confirmed_at else None,
+        "handled_at": c.handled_at.isoformat() if c.handled_at else None,
+        "handle_id": c.handle_id,
+    }
+
+
 @router.post("/otp/request")
 def request_otp(data: OtpRequest, db: Session = Depends(get_db)):
     """Mock UIDAI: issues an OTP for the Aadhaar number."""
@@ -57,7 +71,8 @@ def verify_otp_and_login(data: OtpVerify, db: Session = Depends(get_db)):
     verify_otp(db, data.aadhaar_number, data.otp)
 
     aadhaar_hash = hash_value(data.aadhaar_number)
-    citizen = db.query(Citizen).filter(Citizen.aadhaar_hash == aadhaar_hash).first()
+    citizen = db.query(Citizen).filter(
+        Citizen.aadhaar_hash == aadhaar_hash).first()
     if not citizen:
         # first login: auto-provision from the (mock) eKYC response
         citizen = Citizen(
@@ -72,7 +87,8 @@ def verify_otp_and_login(data: OtpVerify, db: Session = Depends(get_db)):
         db.refresh(citizen)
         logger.info("provisioned new citizen %s", citizen.aadhaar_ref)
 
-    db.add(AuditLog(actor_type="citizen", actor_id=citizen.id, action="login.otp_success"))
+    db.add(AuditLog(actor_type="citizen",
+           actor_id=citizen.id, action="login.otp_success"))
     db.commit()
     return {
         "access_token": create_token(citizen.id, "citizen"),
@@ -100,17 +116,7 @@ def me(current: Citizen = Depends(get_current_citizen), db: Session = Depends(ge
         "dob": current.dob,
         "phone": current.phone,
         "address": ({**current_addr.as_dict(), "version": current_addr.version} if current_addr else None),
-        "consents": [
-            {
-                "id": c.id,
-                "agency_id": c.agency_id,
-                "purpose": c.purpose,
-                "status": c.status,
-                "granted_at": c.granted_at.isoformat() if c.granted_at else None,
-                "revoked_at": c.revoked_at.isoformat() if c.revoked_at else None,
-            }
-            for c in consents
-        ],
+        "consents": [_consent_dict(c) for c in consents],
     }
 
 
@@ -143,7 +149,7 @@ def update_address(
 
     active_consents = (
         db.query(Consent)
-        .filter(Consent.citizen_id == current.id, Consent.status == "granted")
+        .filter(Consent.citizen_id == current.id, Consent.status == "confirmed")
         .all()
     )
     for consent in active_consents:
@@ -165,7 +171,8 @@ def update_address(
             actor_type="citizen",
             actor_id=current.id,
             action="address.updated",
-            detail={"version": version, "notified_agencies": len(active_consents)},
+            detail={"version": version,
+                    "notified_agencies": len(active_consents)},
         )
     )
     db.commit()
@@ -180,21 +187,11 @@ def list_consents(
     current: Citizen = Depends(get_current_citizen), db: Session = Depends(get_db)
 ):
     consents = db.query(Consent).filter(Consent.citizen_id == current.id).all()
-    return [
-        {
-            "id": c.id,
-            "agency_id": c.agency_id,
-            "purpose": c.purpose,
-            "status": c.status,
-            "granted_at": c.granted_at.isoformat() if c.granted_at else None,
-            "revoked_at": c.revoked_at.isoformat() if c.revoked_at else None,
-        }
-        for c in consents
-    ]
+    return [_consent_dict(c) for c in consents]
 
 
 @router.post("/consents", status_code=201)
-def grant_consent(
+def request_consent(
     data: ConsentGrant,
     current: Citizen = Depends(get_current_citizen),
     db: Session = Depends(get_db),
@@ -208,44 +205,35 @@ def grant_consent(
         .filter(Consent.citizen_id == current.id, Consent.agency_id == agency.id)
         .first()
     )
-    regrant = False
+    rerequest = False
     if consent:
-        if consent.status == "granted":
-            raise HTTPException(status_code=409, detail="Consent already granted")
-        consent.status = "granted"
+        if consent.status == "pending":
+            raise HTTPException(
+                status_code=409, detail="Consent request already pending")
+        if consent.status == "confirmed":
+            raise HTTPException(
+                status_code=409, detail="Consent already confirmed")
+        consent.status = "pending"
         consent.purpose = data.purpose
-        consent.granted_at = utcnow()
-        consent.revoked_at = None
-        regrant = True
+        consent.remark = None
+        consent.confirmed_at = None
+        consent.handled_at = None
+        consent.handle_id = None
+        rerequest = True
     else:
         consent = Consent(
             citizen_id=current.id, agency_id=agency.id, purpose=data.purpose
         )
         db.add(consent)
+        rerequest = False
 
     db.flush()
-
-    # push the current address immediately so the agency is in sync from day one
-    current_addr = _current_address(db, current.id)
-    if current_addr:
-        enqueue(
-            db,
-            type_="address.updated",
-            agency_id=agency.id,
-            citizen_id=current.id,
-            payload={
-                "consent_id": consent.id,
-                "citizen_ref": current.aadhaar_ref,
-                "address": {**current_addr.as_dict(), "version": current_addr.version},
-                "reason": "consent_granted",
-            },
-        )
 
     db.add(
         AuditLog(
             actor_type="citizen",
             actor_id=current.id,
-            action="consent.granted" if not regrant else "consent.re_granted",
+            action="consent.requested" if not rerequest else "consent.re_requested",
             detail={"agency_id": agency.id, "consent_id": consent.id},
         )
     )
@@ -259,37 +247,38 @@ def grant_consent(
 
 
 @router.delete("/consents/{agency_id}")
-def revoke_consent(
+def cancel_consent(
     agency_id: str,
     current: Citizen = Depends(get_current_citizen),
     db: Session = Depends(get_db),
 ):
+    """Cancel a consent request. Only possible while it is still pending:
+    once the agency has acted (confirmed/rejected) the record is final."""
     consent = (
         db.query(Consent)
         .filter(Consent.citizen_id == current.id, Consent.agency_id == agency_id)
         .first()
     )
-    if not consent or consent.status != "granted":
-        raise HTTPException(status_code=404, detail="No active consent for this agency")
+    if not consent or consent.status == "rejected":
+        raise HTTPException(
+            status_code=404, detail="No active consent for this agency")
+    if consent.status == "confirmed":
+        raise HTTPException(
+            status_code=409,
+            detail="Consent already confirmed by agency; it can no longer be cancelled",
+        )
 
-    consent.status = "revoked"
-    consent.revoked_at = utcnow()
+    consent.status = "rejected"
+    consent.remark = "Cancelled by citizen"
+    consent.handled_at = utcnow()
 
-    # NOTE: revocation event deliberately carries no address data
-    enqueue(
-        db,
-        type_="consent.revoked",
-        agency_id=agency_id,
-        citizen_id=current.id,
-        payload={"consent_id": consent.id, "citizen_ref": current.aadhaar_ref},
-    )
     db.add(
         AuditLog(
             actor_type="citizen",
             actor_id=current.id,
-            action="consent.revoked",
+            action="consent.cancelled",
             detail={"agency_id": agency_id, "consent_id": consent.id},
         )
     )
     db.commit()
-    return {"consent_id": consent.id, "agency_id": agency_id, "status": "revoked"}
+    return {"consent_id": consent.id, "agency_id": agency_id, "status": "rejected"}

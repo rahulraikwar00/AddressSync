@@ -1,6 +1,7 @@
 import logging
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..auth import (
@@ -100,12 +101,18 @@ def pull_address(
     agency: Agency = Depends(get_current_agency),
     db: Session = Depends(get_db),
 ):
-    """Pull the citizen's current address. Requires an active consent."""
+    """Pull the citizen's current address. Allowed for pending consents too —
+    reviewing before confirm/reject is required."""
     consent = db.get(Consent, consent_id)
     if not consent or consent.agency_id != agency.id:
         raise HTTPException(status_code=404, detail="Consent not found")
-    if consent.status != "granted":
-        raise HTTPException(status_code=403, detail="Consent revoked or inactive")
+    if consent.status == "rejected":
+        raise HTTPException(
+            status_code=403, detail="Consent was rejected or cancelled")
+
+    first_review = consent.reviewed_at is None and consent.status == "pending"
+    if first_review:
+        consent.reviewed_at = utcnow()
 
     record = (
         db.query(AddressRecord)
@@ -123,16 +130,132 @@ def pull_address(
             actor_type="agency",
             actor_id=agency.id,
             action="address.pulled",
-            detail={"consent_id": consent_id, "version": record.version},
+            detail={
+                "consent_id": consent_id,
+                "version": record.version,
+                **({"review": True} if first_review else {}),
+            },
         )
     )
     db.commit()
 
     return {
         "consent_id": consent.id,
+        "consent_status": consent.status,
         "purpose": consent.purpose,
         "citizen_ref": consent.citizen.aadhaar_ref,
         "citizen_name": consent.citizen.name,
         "address": {**record.as_dict(), "version": record.version},
         "pulled_at": utcnow().isoformat() + "Z",
+    }
+
+
+@router.get("/agency/consents/handled")
+def handled_consents(
+    agency: Agency = Depends(get_current_agency),
+    db: Session = Depends(get_db),
+):
+    """Record of every consent this agency has acted on, with the handle id
+    issued at action time."""
+    rows = (
+        db.query(Consent)
+        .filter(Consent.agency_id == agency.id, Consent.handle_id.isnot(None))
+        .order_by(Consent.handled_at.desc())
+        .all()
+    )
+    return [
+        {
+            "consent_id": c.id,
+            "handle_id": c.handle_id,
+            "citizen_name": c.citizen.name,
+            "citizen_ref": c.citizen.aadhaar_ref,
+            "purpose": c.purpose,
+            "status": c.status,
+            "remark": c.remark,
+            "handled_at": c.handled_at.isoformat() if c.handled_at else None,
+        }
+        for c in rows
+    ]
+
+
+@router.post("/agency/consents/{consent_id}/confirm")
+def confirm_consent(
+    consent_id: str,
+    body: dict = Body(default={}),
+    agency: Agency = Depends(get_current_agency),
+    db: Session = Depends(get_db),
+):
+    consent = db.get(Consent, consent_id)
+    if not consent or consent.agency_id != agency.id:
+        raise HTTPException(status_code=404, detail="Consent not found")
+    if consent.status != "pending":
+        raise HTTPException(status_code=400, detail="Consent is not pending")
+    if consent.reviewed_at is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Pull the address first — review is required before confirming",
+        )
+
+    consent.status = "confirmed"
+    consent.confirmed_at = utcnow()
+    consent.handled_at = utcnow()
+    consent.handle_id = str(uuid.uuid4())
+    consent.remark = body.get("remark")
+
+    db.add(
+        AuditLog(
+            actor_type="agency",
+            actor_id=agency.id,
+            action="consent.confirmed",
+            detail={"consent_id": consent_id, "handle_id": consent.handle_id},
+        )
+    )
+    db.commit()
+    return {
+        "consent_id": consent.id,
+        "status": "confirmed",
+        "handle_id": consent.handle_id,
+    }
+
+
+@router.post("/agency/consents/{consent_id}/reject")
+def reject_consent(
+    consent_id: str,
+    body: dict = Body(default={}),
+    agency: Agency = Depends(get_current_agency),
+    db: Session = Depends(get_db),
+):
+    consent = db.get(Consent, consent_id)
+    if not consent or consent.agency_id != agency.id:
+        raise HTTPException(status_code=404, detail="Consent not found")
+    if consent.status != "pending":
+        raise HTTPException(status_code=400, detail="Consent is not pending")
+    if consent.reviewed_at is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Pull the address first — review is required before rejecting",
+        )
+
+    consent.status = "rejected"
+    consent.handled_at = utcnow()
+    consent.handle_id = str(uuid.uuid4())
+    consent.remark = body.get("remark", "Rejected by agency")
+
+    db.add(
+        AuditLog(
+            actor_type="agency",
+            actor_id=agency.id,
+            action="consent.rejected",
+            detail={
+                "consent_id": consent_id,
+                "remark": consent.remark,
+                "handle_id": consent.handle_id,
+            },
+        )
+    )
+    db.commit()
+    return {
+        "consent_id": consent.id,
+        "status": "rejected",
+        "handle_id": consent.handle_id,
     }
